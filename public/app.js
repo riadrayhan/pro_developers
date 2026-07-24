@@ -110,6 +110,121 @@ function fileToBase64(file) {
     });
 }
 
+// ==================== IMAGE COMPRESSION (client-side, before upload) ====================
+// Resizes to a reasonable max dimension and re-encodes as JPEG, stepping
+// quality down until the result fits under maxSizeKB (or hits a quality
+// floor) — keeps uploads small for Drive storage and faster submissions.
+function compressImage(file, maxSizeKB = 300, maxDimension = 1600) {
+    return new Promise((resolve, reject) => {
+        if (!file) {
+            resolve(null);
+            return;
+        }
+        if (!file.type || !file.type.startsWith('image/')) {
+            fileToBase64(file).then(resolve).catch(reject);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onerror = reject;
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > maxDimension || height > maxDimension) {
+                    const scale = maxDimension / Math.max(width, height);
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                let quality = 0.9;
+                let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                const sizeKB = () => (dataUrl.length * 0.75) / 1024;
+
+                while (sizeKB() > maxSizeKB && quality > 0.3) {
+                    quality -= 0.1;
+                    dataUrl = canvas.toDataURL('image/jpeg', quality);
+                }
+
+                resolve(dataUrl);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ==================== GLOBAL PROGRESS BAR ====================
+let progressActive = 0;
+function showProgress() {
+    progressActive++;
+    const bar = document.getElementById('globalProgressBar');
+    if (!bar) return;
+    bar.style.transition = 'none';
+    bar.style.opacity = '1';
+    bar.style.width = '12%';
+    requestAnimationFrame(() => {
+        bar.style.transition = 'width 3s cubic-bezier(0.1, 0.8, 0.9, 1)';
+        bar.style.width = '85%';
+    });
+}
+function hideProgress() {
+    progressActive = Math.max(0, progressActive - 1);
+    if (progressActive > 0) return;
+    const bar = document.getElementById('globalProgressBar');
+    if (!bar) return;
+    bar.style.transition = 'width 0.25s ease-out';
+    bar.style.width = '100%';
+    setTimeout(() => {
+        bar.style.transition = 'opacity 0.3s ease-out';
+        bar.style.opacity = '0';
+        setTimeout(() => { bar.style.width = '0%'; }, 300);
+    }, 250);
+}
+
+// ==================== BUTTON LOADING STATE ====================
+function setButtonLoading(button, loading, loadingText) {
+    if (!button) return;
+    if (loading) {
+        button.dataset.originalHtml = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = `<i class="bi bi-arrow-repeat btn-spin"></i> ${loadingText || 'Please wait...'}`;
+    } else {
+        button.disabled = false;
+        if (button.dataset.originalHtml) {
+            button.innerHTML = button.dataset.originalHtml;
+        }
+    }
+}
+
+// ==================== IMAGE LIGHTBOX (document/photo preview) ====================
+function openLightbox(src) {
+    if (!src) return;
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('imageLightbox').classList.add('active');
+}
+function closeLightbox() {
+    document.getElementById('imageLightbox').classList.remove('active');
+}
+
+// ==================== DATE/TIME FORMATTING ====================
+function formatDateTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
 // ==================== API HELPER ====================
 async function apiRequest(endpoint, method = 'GET', body = null) {
     const options = {
@@ -121,15 +236,20 @@ async function apiRequest(endpoint, method = 'GET', body = null) {
     if (body) {
         options.body = JSON.stringify(body);
     }
-    
-    const response = await fetch(`${API_BASE}${endpoint}`, options);
-    const data = await response.json();
-    
-    if (!response.ok) {
-        throw new Error(data.error || 'Request failed');
+
+    showProgress();
+    try {
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Request failed');
+        }
+
+        return data;
+    } finally {
+        hideProgress();
     }
-    
-    return data;
 }
 
 // ==================== DEVELOPER REGISTRATION ====================
@@ -149,10 +269,13 @@ document.getElementById('devRegForm').addEventListener('submit', async (e) => {
         return;
     }
 
+    const submitBtn = e.target.querySelector('button[type=submit]');
+    setButtonLoading(submitBtn, true, 'Compressing & uploading...');
+    showProgress();
     try {
-        const devImage = await fileToBase64(document.getElementById('devImage').files[0]);
-        const devJobID = await fileToBase64(document.getElementById('devJobID').files[0]);
-        const devNID = await fileToBase64(document.getElementById('devNID').files[0]);
+        const devImage = await compressImage(document.getElementById('devImage').files[0]);
+        const devJobID = await compressImage(document.getElementById('devJobID').files[0]);
+        const devNID = await compressImage(document.getElementById('devNID').files[0]);
 
         const developerData = {
             name: document.getElementById('devName').value,
@@ -166,12 +289,15 @@ document.getElementById('devRegForm').addEventListener('submit', async (e) => {
         };
 
         const result = await apiRequest('/auth/register/developer', 'POST', developerData);
-        
+
         showToast('Account created! Waiting for admin approval.', 'success');
         setCurrentUser(result.user);
         togglePages('waitingPage');
     } catch (error) {
         showToast(error.message, 'error');
+    } finally {
+        hideProgress();
+        setButtonLoading(submitBtn, false);
     }
 });
 
@@ -181,7 +307,8 @@ document.getElementById('devLoginForm').addEventListener('submit', async (e) => 
 
     const phone = document.getElementById('devLoginPhone').value;
     const password = document.getElementById('devLoginPassword').value;
-
+    const submitBtn = e.target.querySelector('button[type=submit]');
+    setButtonLoading(submitBtn, true, 'Signing in...');
     try {
         // Check admin login first
         if (phone === 'admin' && password === 'admin123') {
@@ -193,13 +320,15 @@ document.getElementById('devLoginForm').addEventListener('submit', async (e) => 
         }
 
         const result = await apiRequest('/auth/login', 'POST', { phone, password, role: 'developer' });
-        
+
         setCurrentUser(result.user);
         showToast(`Welcome back, ${result.user.name}!`, 'success');
         await renderJobFeed();
         togglePages('devHomePage');
     } catch (error) {
         showToast(error.message, 'error');
+    } finally {
+        setButtonLoading(submitBtn, false);
     }
 });
 
@@ -220,8 +349,11 @@ document.getElementById('clientRegForm').addEventListener('submit', async (e) =>
         return;
     }
 
+    const submitBtn = e.target.querySelector('button[type=submit]');
+    setButtonLoading(submitBtn, true, 'Compressing & uploading...');
+    showProgress();
     try {
-        const clientImage = await fileToBase64(document.getElementById('clientImage').files[0]);
+        const clientImage = await compressImage(document.getElementById('clientImage').files[0]);
 
         const clientData = {
             name: document.getElementById('clientName').value,
@@ -233,12 +365,15 @@ document.getElementById('clientRegForm').addEventListener('submit', async (e) =>
         };
 
         const result = await apiRequest('/auth/register/client', 'POST', clientData);
-        
+
         showToast('Account created! Waiting for admin approval.', 'success');
         setCurrentUser(result.user);
         togglePages('waitingPage');
     } catch (error) {
         showToast(error.message, 'error');
+    } finally {
+        hideProgress();
+        setButtonLoading(submitBtn, false);
     }
 });
 
@@ -248,16 +383,19 @@ document.getElementById('clientLoginForm').addEventListener('submit', async (e) 
 
     const phone = document.getElementById('clientLoginPhone').value;
     const password = document.getElementById('clientLoginPassword').value;
-
+    const submitBtn = e.target.querySelector('button[type=submit]');
+    setButtonLoading(submitBtn, true, 'Signing in...');
     try {
         const result = await apiRequest('/auth/login', 'POST', { phone, password, role: 'client' });
-        
+
         setCurrentUser(result.user);
         showToast(`Welcome back, ${result.user.name}!`, 'success');
         await renderClientJobs();
         togglePages('clientHomePage');
     } catch (error) {
         showToast(error.message, 'error');
+    } finally {
+        setButtonLoading(submitBtn, false);
     }
 });
 
@@ -265,6 +403,8 @@ document.getElementById('clientLoginForm').addEventListener('submit', async (e) 
 document.getElementById('postJobForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    const submitBtn = e.target.querySelector('button[type=submit]');
+    setButtonLoading(submitBtn, true, 'Posting job...');
     try {
         const jobData = {
             clientId: currentUser.id,
@@ -285,6 +425,8 @@ document.getElementById('postJobForm').addEventListener('submit', async (e) => {
         togglePages('clientHomePage');
     } catch (error) {
         showToast(error.message, 'error');
+    } finally {
+        setButtonLoading(submitBtn, false);
     }
 });
 
@@ -354,6 +496,7 @@ async function displayJobs(jobs) {
                     <span class="job-tag budget"><i class="bi bi-currency-dollar"></i> ${escapeHtml(formatBudget(job.budget))}</span>
                     <span class="job-tag duration"><i class="bi bi-clock"></i> ${escapeHtml(job.duration)}</span>
                     <span class="job-tag phone"><i class="bi bi-whatsapp"></i> ${escapeHtml(job.phone)}</span>
+                    <span class="job-tag date"><i class="bi bi-calendar3"></i> ${formatDateTime(job.postedAt)}</span>
                 </div>
                 <div class="job-actions">
                     <button class="love-btn ${isLiked ? 'loved' : ''}" onclick="toggleLike('${job.id}')">
@@ -439,6 +582,7 @@ async function renderClientJobs() {
                         <span class="job-tag budget"><i class="bi bi-currency-dollar"></i> ${escapeHtml(formatBudget(job.budget))}</span>
                         <span class="job-tag duration"><i class="bi bi-clock"></i> ${escapeHtml(job.duration)}</span>
                         <span class="job-tag phone"><i class="bi bi-whatsapp"></i> ${escapeHtml(job.phone)}</span>
+                        <span class="job-tag date"><i class="bi bi-calendar3"></i> ${formatDateTime(job.postedAt)}</span>
                     </div>
                     <div class="job-actions">
                         <button class="love-btn" disabled style="cursor: default; background: var(--gray-100); border-color: var(--gray-200); color: var(--gray-600);">
@@ -517,6 +661,7 @@ async function renderClientBrowseFeed() {
                         <span class="job-tag budget"><i class="bi bi-currency-dollar"></i> ${escapeHtml(formatBudget(job.budget))}</span>
                         <span class="job-tag duration"><i class="bi bi-clock"></i> ${escapeHtml(job.duration)}</span>
                         <span class="job-tag phone"><i class="bi bi-whatsapp"></i> ${escapeHtml(job.phone)}</span>
+                        <span class="job-tag date"><i class="bi bi-calendar3"></i> ${formatDateTime(job.postedAt)}</span>
                     </div>
                     <div class="job-actions">
                         <button class="love-btn" disabled style="cursor: default; background: var(--gray-100); border-color: var(--gray-200); color: var(--gray-600);">
@@ -653,16 +798,20 @@ async function renderAdminPanel() {
 
             const adminCardHTML = `
                 <div class="admin-user-card">
-                    <img src="${user.image || '/placeholder.jpg'}" class="avatar" onerror="this.src='/placeholder.jpg'" />
+                    <img src="${user.image || '/placeholder.jpg'}" class="avatar" onerror="this.src='/placeholder.jpg'" ${user.image ? `onclick="openLightbox(this.src)"` : ''} />
                     <div class="user-info">
                         <h6>${escapeHtml(user.name)}</h6>
                         <p>
-                            <strong>${approval.type === 'developer' ? '👨‍💻 Developer' : '🏢 Client'}</strong> 
-                            &middot; ${escapeHtml(user.email)} 
+                            <strong>${approval.type === 'developer' ? '👨‍💻 Developer' : '🏢 Client'}</strong>
+                            &middot; ${escapeHtml(user.email)}
                             &middot; 📞 ${escapeHtml(user.phone)}
-                            ${user.jobID ? '&middot; 📎 ID Card uploaded' : ''}
-                            ${user.nid ? '&middot; 🆔 NID uploaded' : ''}
+                            &middot; 🕐 ${formatDateTime(user.registeredAt)}
                         </p>
+                        ${(user.jobID || user.nid) ? `
+                        <div class="doc-thumb-row">
+                            ${user.jobID ? `<div class="doc-thumb-label"><img class="doc-thumb" src="${user.jobID}" onclick="openLightbox(this.src)" alt="Job ID Card" />Job ID Card</div>` : ''}
+                            ${user.nid ? `<div class="doc-thumb-label"><img class="doc-thumb" src="${user.nid}" onclick="openLightbox(this.src)" alt="NID Card" />NID Card</div>` : ''}
+                        </div>` : ''}
                     </div>
                     <span class="badge-status pending"><i class="bi bi-hourglass"></i> Pending</span>
                     <div class="actions" style="display: flex; gap: 8px;">
@@ -743,15 +892,17 @@ async function renderAdminJobPanel() {
         }
 
         jobDiv.innerHTML = jobs.map(job => `
-            <div class="admin-user-card">
-                <img src="${job.clientImage || '/placeholder.jpg'}" class="avatar" onerror="this.src='/placeholder.jpg'" />
+            <div class="admin-user-card" style="align-items: flex-start;">
+                <img src="${job.clientImage || '/placeholder.jpg'}" class="avatar" onerror="this.src='/placeholder.jpg'" ${job.clientImage ? `onclick="openLightbox(this.src)"` : ''} />
                 <div class="user-info">
                     <h6>${escapeHtml(job.title)}</h6>
+                    <p class="job-detail-full">${escapeHtml(job.details)}</p>
                     <p>
                         <strong>🏢 ${escapeHtml(job.clientName)}</strong>
                         &middot; ${escapeHtml(formatBudget(job.budget))}
                         &middot; ${escapeHtml(job.duration)}
                         &middot; 📞 ${escapeHtml(job.phone)}
+                        &middot; 🕐 ${formatDateTime(job.postedAt)}
                     </p>
                 </div>
                 <span class="badge-status pending"><i class="bi bi-hourglass"></i> Pending</span>

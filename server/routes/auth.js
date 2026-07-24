@@ -67,7 +67,7 @@ router.post('/register/developer', async (req, res) => {
 
         // Sync to Drive folder + Sheet via Apps Script (non-blocking)
         try {
-            await appsScript.registerDeveloper({
+            const syncResult = await appsScript.registerDeveloper({
                 name: developerToSave.name,
                 email: developerToSave.email,
                 phone: developerToSave.phone,
@@ -75,8 +75,9 @@ router.post('/register/developer', async (req, res) => {
                 jobID,
                 nid
             });
+            console.log('Apps Script sync OK (developer):', JSON.stringify(syncResult));
         } catch (syncError) {
-            console.error('Apps Script sync failed (non-blocking):', syncError.message);
+            console.error('Apps Script sync FAILED (developer, non-blocking):', syncError.message);
         }
 
         res.status(201).json({
@@ -152,14 +153,15 @@ router.post('/register/client', async (req, res) => {
 
         // Sync to Drive folder + Sheet via Apps Script (non-blocking)
         try {
-            await appsScript.registerClient({
+            const syncResult = await appsScript.registerClient({
                 name: clientToSave.name,
                 email: clientToSave.email,
                 phone: clientToSave.phone,
                 image
             });
+            console.log('Apps Script sync OK (client):', JSON.stringify(syncResult));
         } catch (syncError) {
-            console.error('Apps Script sync failed (non-blocking):', syncError.message);
+            console.error('Apps Script sync FAILED (client, non-blocking):', syncError.message);
         }
 
         res.status(201).json({
