@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs-extra');
+const fs = require('fs');
 
 // Load environment variables from .env file
 try {
@@ -30,7 +30,6 @@ try {
 }
 
 const emailService = require('./services/email');
-const localStorage = require('./services/localStorage');
 
 const authRoutes = require('./routes/auth');
 const jobsRoutes = require('./routes/jobs');
@@ -47,9 +46,6 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Ensure storage directories exist
-localStorage.ensureDataDir();
 
 // Initialize services
 console.log('\n=== Initializing Services ===');
@@ -77,21 +73,20 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'storage', 'uploads')));
+// On Vercel, static files (public/) are served directly by the platform via
+// vercel.json — this function only ever receives /api/* requests there. In
+// local dev there's no separate static host, so serve public/ here too.
+if (!process.env.VERCEL) {
+    const publicPath = path.join(__dirname, '..', 'public');
+    app.use(express.static(publicPath));
 
-// Serve frontend static files (public/index.html)
-const publicPath = path.join(__dirname, '..', 'public');
-app.use(express.static(publicPath));
-
-// Fallback: serve index.html for any unmatched route (SPA support)
-app.get('*', (req, res) => {
-    // Don't catch API routes
-    if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API endpoint not found' });
-    }
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
+    app.get('*', (req, res) => {
+        if (req.path.startsWith('/api/')) {
+            return res.status(404).json({ error: 'API endpoint not found' });
+        }
+        res.sendFile(path.join(publicPath, 'index.html'));
+    });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -99,10 +94,14 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-    console.log(`\n================================================`);
-    console.log(`  🚀 JobPortal Server is running!`);
-    console.log(`  🌐 API: http://localhost:${PORT}/api`);
-    console.log(`  ❤️  Health: http://localhost:${PORT}/api/health`);
-    console.log(`================================================\n`);
-});
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`\n================================================`);
+        console.log(`  🚀 JobPortal Server is running!`);
+        console.log(`  🌐 API: http://localhost:${PORT}/api`);
+        console.log(`  ❤️  Health: http://localhost:${PORT}/api/health`);
+        console.log(`================================================\n`);
+    });
+}
+
+module.exports = app;

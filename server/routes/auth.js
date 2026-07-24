@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
-const localStorage = require('../services/localStorage');
+const db = require('../services/db');
 const appsScript = require('../services/appsScript');
 const emailService = require('../services/email');
 
@@ -28,8 +28,7 @@ router.post('/register/developer', async (req, res) => {
         }
 
         // Check if phone or email already exists
-        const developers = localStorage.readData('developers');
-        const existingDev = developers.find(d => d.phone === phone || d.email === email);
+        const existingDev = await db.findDeveloperByPhoneOrEmail(phone, email);
         if (existingDev) {
             return res.status(400).json({ error: 'Phone number or email already registered' });
         }
@@ -38,9 +37,9 @@ router.post('/register/developer', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
         const id = uuidv4();
-        const developer = {
+        const registeredAt = new Date().toISOString();
+        const developerToSave = {
             id,
-            role: 'developer',
             name,
             email,
             phone,
@@ -49,37 +48,22 @@ router.post('/register/developer', async (req, res) => {
             nid: nid || null,
             password: hashedPassword,
             approved: false,
-            registeredAt: new Date().toISOString()
+            registeredAt,
         };
 
-        // Save images locally
-        const localImage = image ? localStorage.saveBase64Image(image, id, 'photo') : null;
-        const localJobID = jobID ? localStorage.saveBase64Image(jobID, id, 'jobid') : null;
-        const localNID = nid ? localStorage.saveBase64Image(nid, id, 'nid') : null;
-
-        const developerToSave = {
-            ...developer,
-            image: localImage || image,
-            jobID: localJobID || jobID,
-            nid: localNID || nid
-        };
-
-        // Save to local storage
-        developers.push(developerToSave);
-        localStorage.writeData('developers', developers);
+        // Save to database (images stored as their original data URLs)
+        await db.insertDeveloper(developerToSave);
 
         // Add to approvals
-        const approvals = localStorage.readData('approvals');
-        approvals.push({
+        await db.addApproval({
             id: developerToSave.id,
             type: 'developer',
             name: developerToSave.name,
             email: developerToSave.email,
             phone: developerToSave.phone,
             status: 'pending',
-            createdAt: new Date().toISOString()
+            createdAt: registeredAt,
         });
-        localStorage.writeData('approvals', approvals);
 
         // Sync to Drive folder + Sheet via Apps Script (non-blocking)
         try {
@@ -131,8 +115,7 @@ router.post('/register/client', async (req, res) => {
         }
 
         // Check if phone or email already exists
-        const clients = localStorage.readData('clients');
-        const existingClient = clients.find(c => c.phone === phone || c.email === email);
+        const existingClient = await db.findClientByPhoneOrEmail(phone, email);
         if (existingClient) {
             return res.status(400).json({ error: 'Phone number or email already registered' });
         }
@@ -141,42 +124,31 @@ router.post('/register/client', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
         const id = uuidv4();
-        const client = {
+        const registeredAt = new Date().toISOString();
+        const clientToSave = {
             id,
-            role: 'client',
             name,
             email,
             phone,
             image: image || null,
             password: hashedPassword,
             approved: false,
-            registeredAt: new Date().toISOString()
+            registeredAt,
         };
 
-        // Save images locally
-        const localImage = image ? localStorage.saveBase64Image(image, id, 'photo') : null;
-
-        const clientToSave = {
-            ...client,
-            image: localImage || image
-        };
-
-        // Save to local storage
-        clients.push(clientToSave);
-        localStorage.writeData('clients', clients);
+        // Save to database
+        await db.insertClient(clientToSave);
 
         // Add to approvals
-        const approvals = localStorage.readData('approvals');
-        approvals.push({
+        await db.addApproval({
             id: clientToSave.id,
             type: 'client',
             name: clientToSave.name,
             email: clientToSave.email,
             phone: clientToSave.phone,
             status: 'pending',
-            createdAt: new Date().toISOString()
+            createdAt: registeredAt,
         });
-        localStorage.writeData('approvals', approvals);
 
         // Sync to Drive folder + Sheet via Apps Script (non-blocking)
         try {
@@ -228,17 +200,14 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        let users;
         let user = null;
 
         if (!role || role === 'developer') {
-            users = localStorage.readData('developers');
-            user = users.find(d => d.phone === phone);
+            user = await db.findDeveloperByPhone(phone);
         }
 
         if (!user && (!role || role === 'client')) {
-            users = localStorage.readData('clients');
-            user = users.find(c => c.phone === phone);
+            user = await db.findClientByPhone(phone);
         }
 
         if (!user) {
@@ -283,15 +252,10 @@ router.post('/forgot-password', async (req, res) => {
         }
 
         // Search for user in both developers and clients
-        const developers = localStorage.readData('developers');
-        const clients = localStorage.readData('clients');
-
-        let user = developers.find(d => d.email === email);
-        let userType = 'developer';
+        let user = await db.findDeveloperByEmail(email);
 
         if (!user) {
-            user = clients.find(c => c.email === email);
-            userType = 'client';
+            user = await db.findClientByEmail(email);
         }
 
         if (!user) {
@@ -303,15 +267,13 @@ router.post('/forgot-password', async (req, res) => {
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
 
         // Store reset code
-        const resetCodes = localStorage.readData('resetCodes');
-        resetCodes.push({
+        await db.addResetCode({
             email,
             code: resetCode,
             expiresAt,
             used: false,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
         });
-        localStorage.writeData('resetCodes', resetCodes);
 
         // Send email with reset code
         const emailResult = await emailService.sendResetCode(email, user.name, resetCode);
@@ -352,10 +314,7 @@ router.post('/reset-password', async (req, res) => {
         }
 
         // Verify reset code
-        const resetCodes = localStorage.readData('resetCodes');
-        const resetEntry = resetCodes.find(
-            r => r.email === email && r.code === code && !r.used
-        );
+        const resetEntry = await db.findValidResetCode(email, code);
 
         if (!resetEntry) {
             return res.status(400).json({ error: 'Invalid or expired reset code' });
@@ -366,24 +325,19 @@ router.post('/reset-password', async (req, res) => {
         }
 
         // Mark code as used
-        resetEntry.used = true;
-        localStorage.writeData('resetCodes', resetCodes);
+        await db.markResetCodeUsed(resetEntry.id);
 
         // Update password
         const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
-        const developers = localStorage.readData('developers');
-        const devIndex = developers.findIndex(d => d.email === email);
-        if (devIndex > -1) {
-            developers[devIndex].password = hashedPassword;
-            localStorage.writeData('developers', developers);
+        const dev = await db.findDeveloperByEmail(email);
+        if (dev) {
+            await db.updateDeveloperPassword(email, hashedPassword);
         }
 
-        const clients = localStorage.readData('clients');
-        const clientIndex = clients.findIndex(c => c.email === email);
-        if (clientIndex > -1) {
-            clients[clientIndex].password = hashedPassword;
-            localStorage.writeData('clients', clients);
+        const client = await db.findClientByEmail(email);
+        if (client) {
+            await db.updateClientPassword(email, hashedPassword);
         }
 
         res.json({ message: 'Password has been reset successfully. You can now login.' });
@@ -394,19 +348,17 @@ router.post('/reset-password', async (req, res) => {
 });
 
 // ==================== GET USER PROFILE ====================
-router.get('/profile/:id', (req, res) => {
+router.get('/profile/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        const developers = localStorage.readData('developers');
-        const dev = developers.find(d => d.id === id);
+        const dev = await db.findDeveloperById(id);
         if (dev) {
             const { password, ...safeUser } = dev;
             return res.json({ user: safeUser });
         }
 
-        const clients = localStorage.readData('clients');
-        const client = clients.find(c => c.id === id);
+        const client = await db.findClientById(id);
         if (client) {
             const { password, ...safeUser } = client;
             return res.json({ user: safeUser });

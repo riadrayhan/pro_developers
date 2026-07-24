@@ -1,8 +1,7 @@
 const express = require('express');
-const path = require('path');
 const router = express.Router();
 
-const localStorage = require('../services/localStorage');
+const db = require('../services/db');
 const appsScript = require('../services/appsScript');
 const emailService = require('../services/email');
 const excelExport = require('../services/excelExport');
@@ -17,30 +16,23 @@ function adminAuth(req, res, next) {
 }
 
 // ==================== GET ALL PENDING APPROVALS ====================
-router.get('/approvals', (req, res) => {
+router.get('/approvals', async (req, res) => {
     try {
-        const approvals = localStorage.readData('approvals');
-        const developers = localStorage.readData('developers');
-        const clients = localStorage.readData('clients');
+        const approvals = await db.getPendingApprovalRows();
 
-        const pendingApprovals = approvals
-            .filter(a => a.status === 'pending')
-            .map(approval => {
-                let user = null;
-                if (approval.type === 'developer') {
-                    user = developers.find(d => d.id === approval.id);
-                } else {
-                    user = clients.find(c => c.id === approval.id);
-                }
-                if (!user) return null;
+        const pendingApprovals = (
+            await Promise.all(
+                approvals.map(async (approval) => {
+                    const user = approval.type === 'developer'
+                        ? await db.findDeveloperById(approval.id)
+                        : await db.findClientById(approval.id);
+                    if (!user) return null;
 
-                const { password, ...safeUser } = user;
-                return {
-                    approval: approval,
-                    user: safeUser
-                };
-            })
-            .filter(item => item !== null);
+                    const { password, ...safeUser } = user;
+                    return { approval, user: safeUser };
+                })
+            )
+        ).filter(item => item !== null);
 
         res.json({ approvals: pendingApprovals });
     } catch (error) {
@@ -58,21 +50,9 @@ router.post('/approve/:userId', async (req, res) => {
         let user = null;
 
         if (type === 'developer') {
-            const developers = localStorage.readData('developers');
-            const devIndex = developers.findIndex(d => d.id === userId);
-            if (devIndex > -1) {
-                developers[devIndex].approved = true;
-                localStorage.writeData('developers', developers);
-                user = developers[devIndex];
-            }
+            user = await db.approveDeveloper(userId);
         } else if (type === 'client') {
-            const clients = localStorage.readData('clients');
-            const clientIndex = clients.findIndex(c => c.id === userId);
-            if (clientIndex > -1) {
-                clients[clientIndex].approved = true;
-                localStorage.writeData('clients', clients);
-                user = clients[clientIndex];
-            }
+            user = await db.approveClient(userId);
         }
 
         if (!user) {
@@ -80,12 +60,7 @@ router.post('/approve/:userId', async (req, res) => {
         }
 
         // Update approval status
-        const approvals = localStorage.readData('approvals');
-        const approvalIndex = approvals.findIndex(a => a.id === userId);
-        if (approvalIndex > -1) {
-            approvals[approvalIndex].status = 'approved';
-            localStorage.writeData('approvals', approvals);
-        }
+        await db.setApprovalStatus(userId, 'approved');
 
         // Sync approval status via Apps Script (non-blocking)
         try {
@@ -114,7 +89,7 @@ router.post('/approve/:userId', async (req, res) => {
 });
 
 // ==================== REJECT USER ====================
-router.post('/reject/:userId', (req, res) => {
+router.post('/reject/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const { type } = req.body;
@@ -122,21 +97,9 @@ router.post('/reject/:userId', (req, res) => {
         let user = null;
 
         if (type === 'developer') {
-            const developers = localStorage.readData('developers');
-            const devIndex = developers.findIndex(d => d.id === userId);
-            if (devIndex > -1) {
-                user = developers[devIndex];
-                developers.splice(devIndex, 1);
-                localStorage.writeData('developers', developers);
-            }
+            user = await db.rejectDeveloper(userId);
         } else if (type === 'client') {
-            const clients = localStorage.readData('clients');
-            const clientIndex = clients.findIndex(c => c.id === userId);
-            if (clientIndex > -1) {
-                user = clients[clientIndex];
-                clients.splice(clientIndex, 1);
-                localStorage.writeData('clients', clients);
-            }
+            user = await db.rejectClient(userId);
         }
 
         if (!user) {
@@ -144,12 +107,7 @@ router.post('/reject/:userId', (req, res) => {
         }
 
         // Update approval status
-        const approvals = localStorage.readData('approvals');
-        const approvalIndex = approvals.findIndex(a => a.id === userId);
-        if (approvalIndex > -1) {
-            approvals[approvalIndex].status = 'rejected';
-            localStorage.writeData('approvals', approvals);
-        }
+        await db.setApprovalStatus(userId, 'rejected');
 
         res.json({ message: 'User rejected and removed from system.' });
     } catch (error) {
@@ -159,10 +117,10 @@ router.post('/reject/:userId', (req, res) => {
 });
 
 // ==================== GET ALL USERS (Admin only) ====================
-router.get('/users', (req, res) => {
+router.get('/users', async (req, res) => {
     try {
-        const developers = localStorage.readData('developers');
-        const clients = localStorage.readData('clients');
+        const developers = await db.getAllDevelopers();
+        const clients = await db.getAllClients();
 
         const safeDevs = developers.map(d => {
             const { password, ...rest } = d;
@@ -174,7 +132,7 @@ router.get('/users', (req, res) => {
             return rest;
         });
 
-        const approvals = localStorage.readData('approvals');
+        const approvals = await db.getAllApprovals();
 
         res.json({
             developers: safeDevs,
@@ -187,12 +145,12 @@ router.get('/users', (req, res) => {
 });
 
 // ==================== DASHBOARD STATS ====================
-router.get('/stats', (req, res) => {
+router.get('/stats', async (req, res) => {
     try {
-        const developers = localStorage.readData('developers');
-        const clients = localStorage.readData('clients');
-        const jobs = localStorage.readData('jobs');
-        const approvals = localStorage.readData('approvals');
+        const developers = await db.getAllDevelopers();
+        const clients = await db.getAllClients();
+        const jobs = await db.getAllJobs();
+        const approvals = await db.getAllApprovals();
 
         res.json({
             stats: {
@@ -213,12 +171,12 @@ router.get('/stats', (req, res) => {
 });
 
 // ==================== EXPORT ALL DATA TO EXCEL ====================
-router.get('/export-excel', (req, res) => {
+router.get('/export-excel', async (req, res) => {
     try {
-        const buffer = excelExport.generateExcelBuffer();
+        const buffer = await excelExport.generateExcelBuffer();
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
         const fileName = `JobPortal_Data_${timestamp}.xlsx`;
-        
+
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         res.send(buffer);
@@ -228,13 +186,16 @@ router.get('/export-excel', (req, res) => {
     }
 });
 
-// ==================== DOWNLOAD EXCEL FILE ====================
-router.get('/download-excel', (req, res) => {
+// ==================== DOWNLOAD EXCEL FILE (alias of export, buffer-based) ====================
+router.get('/download-excel', async (req, res) => {
     try {
-        const result = excelExport.generateExcel();
-        const fileName = path.basename(result.filePath);
-        
-        res.download(result.filePath, fileName);
+        const buffer = await excelExport.generateExcelBuffer();
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+        const fileName = `JobPortal_Data_${timestamp}.xlsx`;
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.send(buffer);
     } catch (error) {
         console.error('Excel download error:', error);
         res.status(500).json({ error: 'Failed to download Excel: ' + error.message });
