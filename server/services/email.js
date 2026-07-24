@@ -39,7 +39,7 @@ async function sendEmail(to, subject, html) {
     if (transporter) {
         try {
             const info = await transporter.sendMail({
-                from: `"JobPortal" <${process.env.EMAIL_USER}>`,
+                from: `"ProDevelopers" <${process.env.EMAIL_USER}>`,
                 to,
                 subject,
                 html
@@ -75,7 +75,7 @@ async function sendResetCode(to, name, resetCode) {
                 <p style="color: #3d5070; font-size: 15px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
                 
                 <p style="color: #3d5070; font-size: 15px; line-height: 1.6;">
-                    We received a request to reset your JobPortal account password. 
+                    We received a request to reset your ProDevelopers account password. 
                     Use the following code to reset your password:
                 </p>
                 
@@ -91,13 +91,13 @@ async function sendResetCode(to, name, resetCode) {
                 <hr style="border: none; border-top: 1px solid #e6ecf5; margin: 24px 0;">
                 
                 <p style="color: #5e6f8d; font-size: 12px; text-align: center;">
-                    JobPortal &copy; ${new Date().getFullYear()} - All rights reserved
+                    ProDevelopers &copy; ${new Date().getFullYear()} - All rights reserved
                 </p>
             </div>
         </div>
     `;
 
-    return await sendEmail(to, 'JobPortal - Password Reset Code', html);
+    return await sendEmail(to, 'ProDevelopers - Password Reset Code', html);
 }
 
 /**
@@ -118,7 +118,7 @@ async function sendApprovalEmail(to, name, role, appUrl) {
                 <p style="color: #3d5070; font-size: 15px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
                 
                 <p style="color: #3d5070; font-size: 15px; line-height: 1.6;">
-                    Congratulations! Your JobPortal account has been approved. 
+                    Congratulations! Your ProDevelopers account has been approved. 
                     You can now log in as a <strong>${roleName}</strong> and start using the platform.
                 </p>
                 
@@ -126,20 +126,20 @@ async function sendApprovalEmail(to, name, role, appUrl) {
                     <a href="${loginLink}" 
                        style="background: #2a7de1; color: white; padding: 14px 36px; border-radius: 14px; 
                               text-decoration: none; font-weight: 600; font-size: 15px; display: inline-block;">
-                        Login to JobPortal
+                        Login to ProDevelopers
                     </a>
                 </div>
                 
                 <hr style="border: none; border-top: 1px solid #e6ecf5; margin: 24px 0;">
                 
                 <p style="color: #5e6f8d; font-size: 12px; text-align: center;">
-                    JobPortal &copy; ${new Date().getFullYear()} - All rights reserved
+                    ProDevelopers &copy; ${new Date().getFullYear()} - All rights reserved
                 </p>
             </div>
         </div>
     `;
 
-    return await sendEmail(to, 'JobPortal - Account Approved 🎉', html);
+    return await sendEmail(to, 'ProDevelopers - Account Approved 🎉', html);
 }
 
 module.exports = {

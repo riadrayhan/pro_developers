@@ -39,7 +39,7 @@ A complete job marketplace website where **Developers** can find and apply for j
 - **Logout** functionality
 
 ### Admin Features
-- **Hidden Login**: Phone: `admin`, Password: `admin123`
+- **Hidden Login**: Phone: `admin`, Password: `@55555`
 - **User Approval System**:
   - View pending developer and client registrations
   - Approve or reject users
@@ -103,7 +103,7 @@ A complete job marketplace website where **Developers** can find and apply for j
 ### 4. **Admin Approval**
 1. Go to login page
 2. Enter Phone: `admin`
-3. Enter Password: `admin123`
+3. Enter Password: `@55555`
 4. View all pending registrations
 5. Click "Approve" to accept or "Reject" to decline
 6. Users can only login after approval
@@ -193,7 +193,7 @@ A complete job marketplace website where **Developers** can find and apply for j
 
 ### Test Account 1 (Developer)
 1. Register as Developer
-2. Login as Admin (phone: admin, password: admin123)
+2. Login as Admin (phone: admin, password: @55555)
 3. Approve the developer
 4. Login as Developer and post jobs
 
@@ -204,7 +204,7 @@ A complete job marketplace website where **Developers** can find and apply for j
 
 ### Test Admin
 - Phone: `admin`
-- Password: `admin123`
+- Password: `@55555`
 - View all pending approvals
 - Approve/reject users
 

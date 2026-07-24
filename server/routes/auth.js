@@ -191,7 +191,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Check admin login
-        if (phone === 'admin' && password === 'admin123') {
+        if (phone === 'admin' && password === '@55555') {
             return res.json({
                 message: 'Admin login successful',
                 user: {

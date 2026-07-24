@@ -100,7 +100,7 @@ JobPortal is a fully functional job marketplace platform built with **HTML5, CSS
 ## ADMIN FEATURES
 
 ### 1. Admin Login
-- **Hidden Credentials** - Phone: `admin` | Password: `admin123`
+- **Hidden Credentials** - Phone: `admin` | Password: `@55555`
 - **Special Access** - Direct access to admin panel
 
 ### 2. Admin Dashboard
@@ -256,7 +256,7 @@ JobPortal is a fully functional job marketplace platform built with **HTML5, CSS
 8. **Logout** → Return to role selection
 
 ### Admin Path
-1. **Login** → Phone: admin, Password: admin123
+1. **Login** → Phone: admin, Password: @55555
 2. **Admin Dashboard** → View pending registrations
 3. **Review Users** → See profile details
 4. **Approve/Reject** → Take action on applications

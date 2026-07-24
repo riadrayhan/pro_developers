@@ -76,9 +76,11 @@ function togglePages(pageId) {
 }
 
 // ==================== ADMIN PANEL ACCESS FROM ICON ====================
+const ADMIN_PASSWORD = '@55555';
+
 function openAdminPanel() {
     const password = prompt('Enter Admin Password:');
-    if (password === 'admin123') {
+    if (password === ADMIN_PASSWORD) {
         setCurrentUser({ id: 'admin', role: 'admin', name: 'Administrator' });
         showToast('Welcome Admin!', 'success');
         renderAdminPanel();
@@ -87,6 +89,40 @@ function openAdminPanel() {
         showToast('Invalid admin password!', 'error');
     }
 }
+
+// Long-press (press and hold) the smiley icon to reveal the admin password
+// prompt — a quick tap does nothing, so it doesn't read as an obvious admin
+// entry point.
+(function setupAdminLongPress() {
+    const LONG_PRESS_MS = 600;
+    let pressTimer = null;
+
+    function start(e) {
+        e.preventDefault();
+        pressTimer = setTimeout(() => {
+            pressTimer = null;
+            openAdminPanel();
+        }, LONG_PRESS_MS);
+    }
+    function cancel() {
+        if (pressTimer) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('adminIconBtn');
+        if (!btn) return;
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('mouseup', cancel);
+        btn.addEventListener('mouseleave', cancel);
+        btn.addEventListener('touchstart', start, { passive: false });
+        btn.addEventListener('touchend', cancel);
+        btn.addEventListener('touchcancel', cancel);
+        btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
+})();
 
 function selectRole(role) {
     if (role === 'developer') {
@@ -311,7 +347,7 @@ document.getElementById('devLoginForm').addEventListener('submit', async (e) => 
     setButtonLoading(submitBtn, true, 'Signing in...');
     try {
         // Check admin login first
-        if (phone === 'admin' && password === 'admin123') {
+        if (phone === 'admin' && password === ADMIN_PASSWORD) {
             setCurrentUser({ id: 'admin', role: 'admin', name: 'Administrator' });
             showToast('Welcome Admin!', 'success');
             await renderAdminPanel();
@@ -961,7 +997,7 @@ function downloadExcel() {
     showToast('Generating Excel file...', 'info');
     const link = document.createElement('a');
     link.href = `${API_BASE}/admin/export-excel`;
-    link.download = `JobPortal_Data.xlsx`;
+    link.download = `ProDevelopers_Data.xlsx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1015,5 +1051,5 @@ window.addEventListener('load', async () => {
 });
 
 // ==================== ADMIN LOGIN ====================
-// Admin access via devLoginForm - "admin" + "admin123" triggers admin panel
+// Admin access via devLoginForm - "admin" + ADMIN_PASSWORD triggers admin panel
 // The admin check is done in the dev login handler above

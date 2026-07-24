@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JobPortal — Client & Developer Platform</title>
+    <title>ProDevelopers — Client & Developer Platform</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
 
     <!-- Bootstrap 5 + Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -1351,13 +1353,13 @@
         <div id="rolePage" class="page active">
             <div class="navbar-custom">
                 <div class="brand">
-                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
-                    <h1>Job<span>Portal</span></h1>
+                    <div class="logo-icon"><i class="bi bi-code-slash"></i></div>
+                    <h1>Pro<span>Developers</span></h1>
                 </div>
             </div>
             <div class="role-selection">
                 <div class="welcome-text animate__animated animate__fadeInDown">
-                    <h2>Welcome to <span>JobPortal</span></h2>
+                    <h2>Welcome to <span>ProDevelopers</span></h2>
                     <p>Choose your path — whether you're looking to hire talent or find your next project</p>
                 </div>
                 <div class="row g-4 mt-2" style="max-width: 700px; margin: 0 auto;">
@@ -1376,15 +1378,14 @@
                         </div>
                     </div>
                 </div>
-                <!-- Admin Icon Button -->
+                <!-- Hidden admin access: long-press the smiley to unlock the password prompt -->
                 <div style="text-align: center; margin-top: 40px;">
-                    <button onclick="openAdminPanel()" title="Admin Panel" 
-                            style="background: none; border: none; color: var(--gray-400); font-size: 24px; cursor: pointer; transition: var(--transition); padding: 8px 16px; border-radius: var(--radius-full);"
-                            onmouseover="this.style.color='var(--accent)'; this.style.background='rgba(253,121,168,0.1)'" 
+                    <button id="adminIconBtn"
+                            style="background: none; border: none; color: var(--gray-400); font-size: 24px; cursor: pointer; transition: var(--transition); padding: 8px 16px; border-radius: var(--radius-full); user-select: none; -webkit-user-select: none; touch-action: manipulation;"
+                            onmouseover="this.style.color='var(--accent)'; this.style.background='rgba(253,121,168,0.1)'"
                             onmouseout="this.style.color='var(--gray-400)'; this.style.background='none'">
-                        <i class="bi bi-shield-fill"></i>
+                        🙂
                     </button>
-                    <p style="color: var(--gray-400); font-size: 11px; margin-top: 4px;">Admin</p>
                 </div>
             </div>
         </div>
@@ -1516,7 +1517,7 @@
         <div id="clientRegPage" class="page">
             <div class="navbar-custom">
                 <div class="brand">
-                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
+                    <div class="logo-icon"><i class="bi bi-code-slash"></i></div>
                     <h1>Client <span>Registration</span></h1>
                 </div>
                 <div class="nav-actions">
@@ -1580,7 +1581,7 @@
         <div id="clientLoginPage" class="page">
             <div class="navbar-custom">
                 <div class="brand">
-                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
+                    <div class="logo-icon"><i class="bi bi-code-slash"></i></div>
                     <h1>Client <span>Login</span></h1>
                 </div>
                 <div class="nav-actions">
@@ -1706,8 +1707,8 @@
         <div id="devHomePage" class="page">
             <div class="navbar-custom">
                 <div class="brand">
-                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
-                    <h1>Job<span>Portal</span></h1>
+                    <div class="logo-icon"><i class="bi bi-code-slash"></i></div>
+                    <h1>Pro<span>Developers</span></h1>
                 </div>
                 <div class="nav-actions">
                     <span class="badge-role"><i class="bi bi-code-slash"></i> Developer</span>
@@ -1728,8 +1729,8 @@
         <div id="clientHomePage" class="page">
             <div class="navbar-custom">
                 <div class="brand">
-                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
-                    <h1>Job<span>Portal</span></h1>
+                    <div class="logo-icon"><i class="bi bi-code-slash"></i></div>
+                    <h1>Pro<span>Developers</span></h1>
                 </div>
                 <div class="nav-actions">
                     <span class="badge-role client"><i class="bi bi-building"></i> Client</span>
@@ -1835,8 +1836,8 @@
         <div id="waitingPage" class="page">
             <div class="navbar-custom">
                 <div class="brand">
-                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
-                    <h1>Job<span>Portal</span></h1>
+                    <div class="logo-icon"><i class="bi bi-code-slash"></i></div>
+                    <h1>Pro<span>Developers</span></h1>
                 </div>
             </div>
             <div class="waiting-container">

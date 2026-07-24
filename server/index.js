@@ -97,7 +97,7 @@ app.use((err, req, res, next) => {
 if (!process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`\n================================================`);
-        console.log(`  🚀 JobPortal Server is running!`);
+        console.log(`  🚀 ProDevelopers Server is running!`);
         console.log(`  🌐 API: http://localhost:${PORT}/api`);
         console.log(`  ❤️  Health: http://localhost:${PORT}/api/health`);
         console.log(`================================================\n`);

@@ -182,7 +182,7 @@ router.get('/export-excel', async (req, res) => {
     try {
         const buffer = await excelExport.generateExcelBuffer();
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-        const fileName = `JobPortal_Data_${timestamp}.xlsx`;
+        const fileName = `ProDevelopers_Data_${timestamp}.xlsx`;
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
@@ -198,7 +198,7 @@ router.get('/download-excel', async (req, res) => {
     try {
         const buffer = await excelExport.generateExcelBuffer();
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-        const fileName = `JobPortal_Data_${timestamp}.xlsx`;
+        const fileName = `ProDevelopers_Data_${timestamp}.xlsx`;
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
