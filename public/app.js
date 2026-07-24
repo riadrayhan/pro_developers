@@ -3,6 +3,15 @@
 // page (see vercel.json), so this works locally and once deployed alike.
 const API_BASE = '/api';
 
+// ==================== MONETAG AD NETWORK ====================
+// Registers Monetag's service worker (public/sw.js) at root scope so its
+// push-notification ad zone can run.
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.error('Monetag service worker registration failed:', err.message);
+    });
+}
+
 // ==================== SESSION MANAGEMENT ====================
 let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
 let allJobs = []; // Cache for job search filtering
