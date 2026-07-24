@@ -48,8 +48,10 @@ const CREATE_STATEMENTS = [
         budget NUMERIC NOT NULL,
         duration TEXT,
         status TEXT NOT NULL DEFAULT 'pending',
-        posted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        posted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        approved_at TIMESTAMPTZ
     )`,
+    `ALTER TABLE jobs ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ`,
     `CREATE TABLE IF NOT EXISTS likes (
         job_id UUID NOT NULL,
         user_id UUID NOT NULL,
@@ -73,6 +75,10 @@ const CREATE_STATEMENTS = [
         used BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
+    // Jobs already approved before the approved_at column existed get a
+    // fresh 7-day window starting now, instead of expiring immediately or
+    // never expiring.
+    `UPDATE jobs SET approved_at = now() WHERE status = 'approved' AND approved_at IS NULL`,
 ];
 
 // The HTTP driver occasionally hits a transient connect timeout to Neon;
@@ -245,7 +251,19 @@ function mapClient(row) {
 }
 
 // ==================== JOBS ====================
+const JOB_EXPIRY_DAYS = 7;
+
+// Approved posts auto-expire JOB_EXPIRY_DAYS after approval. Cheap to run on
+// every read of approved jobs rather than needing separate cron infra.
+async function deleteExpiredApprovedJobs() {
+    await query(
+        `DELETE FROM jobs WHERE status = 'approved' AND approved_at < now() - ($1::numeric * interval '1 day')`,
+        [JOB_EXPIRY_DAYS]
+    );
+}
+
 async function getApprovedJobs() {
+    await deleteExpiredApprovedJobs();
     const { rows } = await query("SELECT * FROM jobs WHERE status = 'approved' ORDER BY posted_at DESC");
     return rows.map(mapJob);
 }
@@ -256,11 +274,13 @@ async function getPendingJobs() {
 }
 
 async function getClientJobs(clientId) {
+    await deleteExpiredApprovedJobs();
     const { rows } = await query('SELECT * FROM jobs WHERE client_id = $1 ORDER BY posted_at DESC', [clientId]);
     return rows.map(mapJob);
 }
 
 async function getAllJobs() {
+    await deleteExpiredApprovedJobs();
     const { rows } = await query('SELECT * FROM jobs ORDER BY posted_at DESC');
     return rows.map(mapJob);
 }
@@ -274,7 +294,7 @@ async function insertJob(job) {
 }
 
 async function approveJob(id) {
-    const { rows } = await query("UPDATE jobs SET status = 'approved' WHERE id = $1 RETURNING *", [id]);
+    const { rows } = await query("UPDATE jobs SET status = 'approved', approved_at = now() WHERE id = $1 RETURNING *", [id]);
     return rows[0] ? mapJob(rows[0]) : null;
 }
 
@@ -301,6 +321,7 @@ function mapJob(row) {
         duration: row.duration,
         status: row.status,
         postedAt: toISO(row.posted_at),
+        approvedAt: toISO(row.approved_at),
     };
 }
 
