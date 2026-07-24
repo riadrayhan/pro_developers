@@ -1,8 +1,11 @@
 // ==================== BACKEND API CONFIGURATION ====================
-// Relative path: works locally (server serves this file + /api on the same
-// port) and once deployed live (same origin, whatever domain that ends up
-// being) — no hardcoded host needed.
-const API_BASE = '/api';
+// When this file is served by the Express server itself (local dev, or any
+// single-host deploy), same-origin '/api' works. When served statically from
+// GitHub Pages, the API lives on a different origin (Render), so it must be
+// an absolute URL — update RENDER_API_URL if your Render service gets a
+// different generated hostname than the one below.
+const RENDER_API_URL = 'https://pro-developers-api.onrender.com/api';
+const API_BASE = (location.hostname.endsWith('github.io')) ? RENDER_API_URL : '/api';
 
 // ==================== SESSION MANAGEMENT ====================
 let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
