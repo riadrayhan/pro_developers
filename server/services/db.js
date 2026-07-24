@@ -308,6 +308,12 @@ async function deleteJob(id, clientId) {
     return rows[0] ? mapJob(rows[0]) : null;
 }
 
+// Admin override: delete any job regardless of owner (e.g. a live/approved post).
+async function deleteJobByIdAdmin(id) {
+    const { rows } = await query('DELETE FROM jobs WHERE id = $1 RETURNING *', [id]);
+    return rows[0] ? mapJob(rows[0]) : null;
+}
+
 function mapJob(row) {
     return {
         id: row.id,
@@ -423,7 +429,7 @@ module.exports = {
     getAllClients, findClientByPhoneOrEmail, findClientByPhone, findClientByEmail,
     findClientById, insertClient, approveClient, rejectClient, updateClientPassword,
     // jobs
-    getApprovedJobs, getPendingJobs, getClientJobs, getAllJobs, insertJob, approveJob, rejectJob, deleteJob,
+    getApprovedJobs, getPendingJobs, getClientJobs, getAllJobs, insertJob, approveJob, rejectJob, deleteJob, deleteJobByIdAdmin,
     // likes
     getAllLikes, countLikesForJob, countLikesByJob, isLiked, toggleLike,
     // approvals

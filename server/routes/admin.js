@@ -193,6 +193,20 @@ router.get('/export-excel', async (req, res) => {
     }
 });
 
+// ==================== DELETE A LIVE/APPROVED JOB POST (admin only) ====================
+router.delete('/jobs/:jobId', async (req, res) => {
+    try {
+        const job = await db.deleteJobByIdAdmin(req.params.jobId);
+        if (!job) {
+            return res.status(404).json({ error: 'Job not found' });
+        }
+        res.json({ message: 'Post deleted successfully.' });
+    } catch (error) {
+        console.error('Admin delete job error:', error);
+        res.status(500).json({ error: 'Failed to delete post: ' + error.message });
+    }
+});
+
 // ==================== DOWNLOAD EXCEL FILE (alias of export, buffer-based) ====================
 router.get('/download-excel', async (req, res) => {
     try {

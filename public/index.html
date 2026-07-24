@@ -992,6 +992,53 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
+        /* ============================================================
+                   APP MODAL (status popups)
+                ============================================================ */
+        .app-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 26, 46, 0.6);
+            align-items: center;
+            justify-content: center;
+            z-index: 3500;
+            padding: 24px;
+        }
+
+        .app-modal-overlay.active {
+            display: flex;
+        }
+
+        .app-modal-box {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 36px 32px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .app-modal-box .app-modal-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .app-modal-box h3 {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .app-modal-box p {
+            color: var(--gray-600);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
         .doc-thumb-row {
             display: flex;
             gap: 10px;
@@ -1351,6 +1398,16 @@
     <!-- Image Lightbox (document/photo preview) -->
     <div id="imageLightbox" class="lightbox-overlay" onclick="closeLightbox()">
         <img id="lightboxImg" src="" alt="Preview" />
+    </div>
+
+    <!-- App Modal (status popups: account/post approved or rejected) -->
+    <div id="appModal" class="app-modal-overlay">
+        <div class="app-modal-box">
+            <div class="app-modal-icon" id="appModalIcon"></div>
+            <h3 id="appModalTitle"></h3>
+            <p id="appModalMessage"></p>
+            <button class="btn-primary-custom" id="appModalOkBtn" style="width: auto; padding: 12px 40px;">OK</button>
+        </div>
     </div>
 
     <div id="app">
@@ -1834,6 +1891,11 @@
                 </button>
             </div>
             <div id="adminJobPanel" class="mb-4"></div>
+
+            <h3 style="font-weight: 700; font-size: 20px; color: var(--gray-900); margin-bottom: 16px;">
+                <i class="bi bi-broadcast"></i> Live Job Posts
+            </h3>
+            <div id="adminActiveJobPanel" class="mb-4"></div>
 
             <h3 style="font-weight: 700; font-size: 20px; color: var(--gray-900); margin-bottom: 16px;">
                 <i class="bi bi-hourglass-split"></i> Pending Account Approvals

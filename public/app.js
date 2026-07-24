@@ -37,7 +37,100 @@ function logout() {
     currentUser = null;
     allJobs = [];
     sessionStorage.removeItem('currentUser');
+    stopWaitingPoll();
+    stopClientJobsPoll();
     togglePages('rolePage');
+}
+
+// ==================== WAITING-FOR-APPROVAL POLLING ====================
+// While on the waiting page, periodically checks whether an admin has acted
+// on this account yet, and pops a modal the moment it has instead of making
+// the user guess by trying to log in.
+let waitingPollTimer = null;
+
+function startWaitingPoll(userId, role) {
+    stopWaitingPoll();
+    waitingPollTimer = setInterval(async () => {
+        try {
+            const result = await apiRequest(`/auth/profile/${userId}`);
+            if (result.user && result.user.approved) {
+                stopWaitingPoll();
+                showModal({
+                    icon: '✅',
+                    title: 'Account Approved!',
+                    message: 'Your account has been approved. Click OK to login.',
+                    onOk: () => togglePages(role === 'developer' ? 'devLoginPage' : 'clientLoginPage'),
+                });
+            }
+        } catch (error) {
+            // Profile lookup 404s once an admin rejects the account (rejection
+            // deletes the record), so that's how we detect rejection here.
+            stopWaitingPoll();
+            showModal({
+                icon: '❌',
+                title: 'Registration Rejected',
+                message: 'Your registration was not approved. Click OK to register again.',
+                onOk: () => togglePages(role === 'developer' ? 'devRegPage' : 'clientRegPage'),
+            });
+        }
+    }, 4000);
+}
+
+function stopWaitingPoll() {
+    if (waitingPollTimer) {
+        clearInterval(waitingPollTimer);
+        waitingPollTimer = null;
+    }
+}
+
+// ==================== CLIENT JOB-POST STATUS POLLING ====================
+// While logged in as a client, periodically checks their own posts for a
+// pending -> approved/rejected transition and pops a modal the moment one
+// happens, instead of the client having to notice a badge changed on its own.
+let clientJobsPollTimer = null;
+let knownJobStatuses = {};
+
+function startClientJobsPoll() {
+    stopClientJobsPoll();
+    clientJobsPollTimer = setInterval(async () => {
+        if (!currentUser || currentUser.role !== 'client') {
+            stopClientJobsPoll();
+            return;
+        }
+        try {
+            const result = await apiRequest(`/jobs/client/${currentUser.id}`);
+            const jobs = result.jobs || [];
+            jobs.forEach((job) => {
+                const prevStatus = knownJobStatuses[job.id];
+                if (prevStatus === 'pending' && job.status === 'approved') {
+                    showModal({
+                        icon: '✅',
+                        title: 'Post Approved!',
+                        message: `Your post "${job.title}" is now live and visible to everyone.`,
+                        onOk: () => renderClientJobs(),
+                    });
+                } else if (prevStatus === 'pending' && job.status === 'rejected') {
+                    showModal({
+                        icon: '❌',
+                        title: 'Post Rejected',
+                        message: `Your post "${job.title}" was rejected. You can post again.`,
+                        onOk: () => togglePages('postJobPage'),
+                    });
+                }
+                knownJobStatuses[job.id] = job.status;
+            });
+        } catch (e) {
+            // Transient failure — try again on the next tick.
+        }
+    }, 5000);
+}
+
+function stopClientJobsPoll() {
+    if (clientJobsPollTimer) {
+        clearInterval(clientJobsPollTimer);
+        clientJobsPollTimer = null;
+    }
+    knownJobStatuses = {};
 }
 
 // ==================== TOAST NOTIFICATION SYSTEM ====================
@@ -271,6 +364,24 @@ function closeLightbox() {
     document.getElementById('imageLightbox').classList.remove('active');
 }
 
+// ==================== APP MODAL (status popups) ====================
+function showModal({ icon, title, message, onOk }) {
+    document.getElementById('appModalIcon').textContent = icon || '';
+    document.getElementById('appModalTitle').textContent = title || '';
+    document.getElementById('appModalMessage').textContent = message || '';
+
+    // Replace the OK button so we never stack listeners from previous calls.
+    const okBtn = document.getElementById('appModalOkBtn');
+    const freshOkBtn = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(freshOkBtn, okBtn);
+    freshOkBtn.addEventListener('click', () => {
+        document.getElementById('appModal').classList.remove('active');
+        if (onOk) onOk();
+    });
+
+    document.getElementById('appModal').classList.add('active');
+}
+
 // ==================== DATE/TIME FORMATTING ====================
 function formatDateTime(iso) {
     if (!iso) return '';
@@ -350,6 +461,7 @@ document.getElementById('devRegForm').addEventListener('submit', async (e) => {
         showToast('Account created! Waiting for admin approval.', 'success');
         setCurrentUser(result.user);
         togglePages('waitingPage');
+        startWaitingPoll(result.user.id, 'developer');
     } catch (error) {
         showToast(error.message, 'error');
     } finally {
@@ -426,6 +538,7 @@ document.getElementById('clientRegForm').addEventListener('submit', async (e) =>
         showToast('Account created! Waiting for admin approval.', 'success');
         setCurrentUser(result.user);
         togglePages('waitingPage');
+        startWaitingPoll(result.user.id, 'client');
     } catch (error) {
         showToast(error.message, 'error');
     } finally {
@@ -449,6 +562,7 @@ document.getElementById('clientLoginForm').addEventListener('submit', async (e) 
         showToast(`Welcome back, ${result.user.name}!`, 'success');
         await renderClientJobs();
         togglePages('clientHomePage');
+        startClientJobsPoll();
     } catch (error) {
         showToast(error.message, 'error');
     } finally {
@@ -829,6 +943,9 @@ async function renderAdminPanel() {
     // Render pending job posts
     await renderAdminJobPanel();
 
+    // Render live/approved job posts
+    await renderAdminActiveJobs();
+
     // Render approvals
     const adminDiv = document.getElementById('adminPanel');
     adminDiv.innerHTML = '<div class="loading-spinner"><div class="spinner-custom"></div></div>';
@@ -1002,6 +1119,68 @@ async function rejectJob(jobId) {
     }
 }
 
+// ==================== ADMIN: LIVE / APPROVED JOB POSTS ====================
+async function renderAdminActiveJobs() {
+    const jobDiv = document.getElementById('adminActiveJobPanel');
+    jobDiv.innerHTML = '<div class="loading-spinner"><div class="spinner-custom"></div></div>';
+
+    try {
+        const result = await apiRequest('/jobs');
+        const jobs = result.jobs || [];
+
+        if (jobs.length === 0) {
+            jobDiv.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: var(--gray-500);">
+                    <i class="bi bi-briefcase" style="font-size: 48px; display: block; margin-bottom: 16px;"></i>
+                    <p style="font-size: 16px;">No live posts right now.</p>
+                </div>
+            `;
+            return;
+        }
+
+        jobDiv.innerHTML = jobs.map(job => `
+            <div class="admin-user-card" style="align-items: flex-start;">
+                <img src="${job.clientImage || '/placeholder.jpg'}" class="avatar" onerror="this.src='/placeholder.jpg'" ${job.clientImage ? `onclick="openLightbox(this.src)"` : ''} />
+                <div class="user-info">
+                    <h6>${escapeHtml(job.title)}</h6>
+                    <p class="job-detail-full">${escapeHtml(job.details)}</p>
+                    <p>
+                        <strong>🏢 ${escapeHtml(job.clientName)}</strong>
+                        &middot; ${escapeHtml(formatBudget(job.budget))}
+                        &middot; ${escapeHtml(job.duration)}
+                        &middot; 📞 ${escapeHtml(job.phone)}
+                        &middot; 🕐 ${formatDateTime(job.postedAt)}
+                        &middot; ❤️ ${job.likes || 0}
+                    </p>
+                </div>
+                <span class="badge-status approved"><i class="bi bi-broadcast"></i> Live</span>
+                <div class="actions" style="display: flex; gap: 8px;">
+                    <button class="btn-danger-custom btn-small" onclick="deleteActiveJob('${job.id}', '${escapeHtml(job.title).replace(/'/g, "\\'")}')">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        jobDiv.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--gray-500);">
+                <p>Failed to load live posts.</p>
+            </div>
+        `;
+    }
+}
+
+async function deleteActiveJob(jobId, title) {
+    if (!confirm(`Delete the live post "${title}"? This can't be undone.`)) return;
+    try {
+        await apiRequest(`/admin/jobs/${jobId}`, 'DELETE');
+        showToast('Post deleted.', 'warning');
+        await renderAdminPanel();
+    } catch (error) {
+        showToast(error.message, 'error');
+    }
+}
+
 // ==================== APPROVE USER ====================
 async function approveUser(userId, type) {
     try {
@@ -1055,6 +1234,13 @@ function formatBudget(budget) {
 // ==================== AUTO-LOGIN CHECK ====================
 window.addEventListener('load', async () => {
     if (currentUser) {
+        if ((currentUser.role === 'developer' || currentUser.role === 'client') && currentUser.approved === false) {
+            // Registered but not yet approved — resume the waiting page and
+            // its polling instead of incorrectly jumping to the dashboard.
+            togglePages('waitingPage');
+            startWaitingPoll(currentUser.id, currentUser.role);
+            return;
+        }
         if (currentUser.role === 'developer') {
             await renderJobFeed();
             togglePages('devHomePage');
@@ -1063,6 +1249,7 @@ window.addEventListener('load', async () => {
             await renderClientJobs();
             togglePages('clientHomePage');
             showToast(`Welcome back, ${currentUser.name}!`, 'success');
+            startClientJobsPoll();
         } else if (currentUser.role === 'admin') {
             await renderAdminPanel();
             togglePages('adminPage');
