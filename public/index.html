@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JobPortal — Client & Developer Platform</title>
+
+    <!-- Bootstrap 5 + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <style>
+        /* ============================================================
+                   ROOT VARIABLES & RESET
+                ============================================================ */
+        :root {
+            --primary: #6C5CE7;
+            --primary-dark: #5A4BD1;
+            --primary-light: #A29BFE;
+            --secondary: #00CEC9;
+            --secondary-dark: #00B5B0;
+            --accent: #FD79A8;
+            --accent-dark: #E84393;
+            --warning: #FDCB6E;
+            --danger: #FF7675;
+            --success: #55EfC4;
+            --dark: #2D3436;
+            --gray-900: #1A1A2E;
+            --gray-800: #2D2D44;
+            --gray-700: #4A4A6A;
+            --gray-600: #6C6C8A;
+            --gray-500: #8E8EA8;
+            --gray-400: #B0B0C4;
+            --gray-300: #D0D0E0;
+            --gray-200: #E8E8F0;
+            --gray-100: #F4F4F8;
+            --white: #FFFFFF;
+            --gradient-1: linear-gradient(135deg, #6C5CE7 0%, #A29BFE 100%);
+            --gradient-2: linear-gradient(135deg, #00CEC9 0%, #55EFC4 100%);
+            --gradient-3: linear-gradient(135deg, #FD79A8 0%, #E84393 100%);
+            --gradient-hero: linear-gradient(135deg, #1A1A2E 0%, #2D2D44 50%, #6C5CE7 100%);
+            --gradient-card: linear-gradient(145deg, #FFFFFF, #F4F4F8);
+            --shadow-sm: 0 2px 8px rgba(108, 92, 231, 0.08);
+            --shadow-md: 0 8px 32px rgba(108, 92, 231, 0.12);
+            --shadow-lg: 0 16px 48px rgba(108, 92, 231, 0.16);
+            --shadow-xl: 0 24px 64px rgba(108, 92, 231, 0.20);
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --radius-full: 9999px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gray-100);
+            min-height: 100vh;
+            color: var(--gray-900);
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+                   ANIMATED BACKGROUND
+                ============================================================ */
+        .bg-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: var(--gray-100);
+        }
+
+        .bg-animated .circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.08;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-animated .circle:nth-child(1) {
+            width: 600px;
+            height: 600px;
+            background: var(--primary);
+            top: -200px;
+            right: -200px;
+            animation-delay: 0s;
+        }
+
+        .bg-animated .circle:nth-child(2) {
+            width: 400px;
+            height: 400px;
+            background: var(--secondary);
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -5s;
+        }
+
+        .bg-animated .circle:nth-child(3) {
+            width: 300px;
+            height: 300px;
+            background: var(--accent);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(50px, -50px) scale(1.1);
+            }
+            50% {
+                transform: translate(-30px, 30px) scale(0.9);
+            }
+            75% {
+                transform: translate(40px, 20px) scale(1.05);
+            }
+        }
+
+        /* ============================================================
+                   APP CONTAINER
+                ============================================================ */
+        #app {
+            width: 100%;
+            max-width: 1320px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            padding: 0;
+            margin: 20px auto;
+            min-height: calc(100vh - 40px);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ============================================================
+                   PAGE SECTIONS
+                ============================================================ */
+        .page {
+            display: none;
+            padding: 32px 40px;
+        }
+        .page.active {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================================
+                   NAVBAR / BRAND BAR
+                ============================================================ */
+        .navbar-custom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0;
+            margin-bottom: 28px;
+            border-bottom: 2px solid var(--gray-200);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .navbar-custom .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .navbar-custom .brand .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-1);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+        }
+
+        .navbar-custom .brand h1 {
+            font-weight: 800;
+            font-size: 24px;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .navbar-custom .brand h1 span {
+            font-weight: 300;
+            -webkit-text-fill-color: var(--gray-500);
+        }
+
+        .navbar-custom .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge-role {
+            background: var(--gradient-1);
+            padding: 8px 20px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 13px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.25);
+        }
+
+        .badge-role.client {
+            background: var(--gradient-2);
+        }
+
+        .badge-role.admin {
+            background: var(--gradient-3);
+        }
+
+        .btn-logout {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            border-radius: var(--radius-full);
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 118, 117, 0.3);
+        }
+
+        .btn-back {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            border-radius: var(--radius-full);
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: var(--gray-300);
+            transform: translateY(-2px);
+        }
+
+        /* ============================================================
+                   BUTTONS
+                ============================================================ */
+        .btn-primary-custom {
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            padding: 14px 32px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(108, 92, 231, 0.35);
+            color: white;
+        }
+
+        .btn-primary-custom:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary-custom {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            border-radius: var(--radius-full);
+            padding: 14px 32px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-secondary-custom:hover {
+            background: var(--gray-300);
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 10px 24px;
+            font-size: 13px;
+            width: auto;
+        }
+
+        .btn-success-custom {
+            background: var(--gradient-2);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            padding: 10px 24px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 206, 201, 0.35);
+        }
+
+        .btn-danger-custom {
+            background: var(--gradient-3);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            padding: 10px 24px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-danger-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(253, 121, 168, 0.35);
+        }
+
+        /* ============================================================
+                   ROLE SELECTION CARDS
+                ============================================================ */
+        .role-selection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            text-align: center;
+        }
+
+        .role-selection .welcome-text {
+            margin-bottom: 40px;
+        }
+
+        .role-selection .welcome-text h2 {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .role-selection .welcome-text h2 span {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .role-selection .welcome-text p {
+            color: var(--gray-600);
+            font-size: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .role-card {
+            background: var(--gradient-card);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 44px 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            transition: var(--transition);
+        }
+
+        .role-card:nth-child(1)::before {
+            background: var(--gradient-1);
+        }
+
+        .role-card:nth-child(2)::before {
+            background: var(--gradient-2);
+        }
+
+        .role-card:hover {
+            border-color: transparent;
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .role-card:nth-child(1):hover {
+            box-shadow: 0 16px 48px rgba(108, 92, 231, 0.2);
+        }
+
+        .role-card:nth-child(2):hover {
+            box-shadow: 0 16px 48px rgba(0, 206, 201, 0.2);
+        }
+
+        .role-card .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            transition: var(--transition);
+        }
+
+        .role-card:nth-child(1) .icon-wrapper {
+            background: rgba(108, 92, 231, 0.1);
+            color: var(--primary);
+        }
+
+        .role-card:nth-child(2) .icon-wrapper {
+            background: rgba(0, 206, 201, 0.1);
+            color: var(--secondary);
+        }
+
+        .role-card:hover .icon-wrapper {
+            transform: scale(1.1) rotate(-5deg);
+        }
+
+        .role-card h4 {
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--gray-900);
+            margin-bottom: 8px;
+        }
+
+        .role-card p {
+            color: var(--gray-500);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* ============================================================
+                   FORM STYLES
+                ============================================================ */
+        .form-wrapper {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .form-header .form-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--gradient-1);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            margin: 0 auto 16px;
+            box-shadow: 0 8px 24px rgba(108, 92, 231, 0.3);
+        }
+
+        .form-header h3 {
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--gray-900);
+            margin-bottom: 6px;
+        }
+
+        .form-header .sub {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+        }
+
+        .form-control-modern {
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            font-size: 14px;
+            background: var(--white);
+            transition: var(--transition);
+            width: 100%;
+            color: var(--gray-900);
+        }
+
+        .form-control-modern:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
+            outline: none;
+        }
+
+        .form-control-modern::placeholder {
+            color: var(--gray-400);
+        }
+
+        .form-label-modern {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--gray-700);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-label-modern i {
+            color: var(--primary-light);
+        }
+
+        .form-check-modern {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle .toggle-eye {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--gray-400);
+            transition: var(--transition);
+            background: none;
+            border: none;
+            font-size: 18px;
+        }
+
+        .password-toggle .toggle-eye:hover {
+            color: var(--primary);
+        }
+
+        .file-upload-area {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(108, 92, 231, 0.03);
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(108, 92, 231, 0.06);
+        }
+
+        .file-upload-area i {
+            font-size: 32px;
+            color: var(--primary-light);
+            margin-bottom: 8px;
+        }
+
+        .file-upload-area p {
+            color: var(--gray-500);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .file-upload-area .file-name {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 13px;
+            display: none;
+        }
+
+        /* ============================================================
+                   TOGGLE LINKS
+                ============================================================ */
+        .toggle-link {
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .toggle-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* ============================================================
+                   JOB CARDS
+                ============================================================ */
+        .job-feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .job-feed-header h3 {
+            font-weight: 700;
+            font-size: 22px;
+            color: var(--gray-900);
+        }
+
+        .job-search {
+            position: relative;
+            max-width: 320px;
+            width: 100%;
+        }
+
+        .job-search input {
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-full);
+            padding: 12px 20px 12px 44px;
+            font-size: 14px;
+            background: var(--white);
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .job-search input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
+            outline: none;
+        }
+
+        .job-search i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+        }
+
+        .job-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            transition: var(--transition);
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .job-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient-1);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .job-card:hover {
+            border-color: transparent;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-4px);
+        }
+
+        .job-card:hover::before {
+            opacity: 1;
+        }
+
+        .job-card .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .job-card .job-title {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--gray-900);
+            margin: 0;
+        }
+
+        .job-card .job-client {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray-500);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .job-card .job-client img {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--gray-200);
+        }
+
+        .job-card .job-detail {
+            color: var(--gray-600);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .job-card .job-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .job-card .job-tag {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .job-card .job-tag i {
+            font-size: 14px;
+        }
+
+        .job-card .job-tag.budget {
+            background: rgba(0, 206, 201, 0.1);
+            color: var(--secondary-dark);
+        }
+
+        .job-card .job-tag.duration {
+            background: rgba(108, 92, 231, 0.1);
+            color: var(--primary);
+        }
+
+        .job-card .job-tag.phone {
+            background: rgba(253, 121, 168, 0.1);
+            color: var(--accent-dark);
+        }
+
+        .job-card .job-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .love-btn {
+            background: none;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-full);
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-500);
+            transition: var(--transition);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .love-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(253, 121, 168, 0.06);
+            transform: scale(1.05);
+        }
+
+        .love-btn.loved {
+            border-color: var(--accent);
+            background: rgba(253, 121, 168, 0.1);
+            color: var(--accent);
+        }
+
+        .love-btn i {
+            font-size: 16px;
+        }
+
+        .love-btn .count {
+            font-weight: 700;
+        }
+
+        /* ============================================================
+                   ADMIN PANEL
+                ============================================================ */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .admin-stat-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            transition: var(--transition);
+        }
+
+        .admin-stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .admin-stat-card .stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1;
+        }
+
+        .admin-stat-card .stat-label {
+            color: var(--gray-500);
+            font-size: 13px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .admin-stat-card .stat-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .admin-user-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            padding: 18px 22px;
+            transition: var(--transition);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .admin-user-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .admin-user-card .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--gray-200);
+            background: var(--gray-100);
+            flex-shrink: 0;
+        }
+
+        .admin-user-card .user-info {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .admin-user-card .user-info h6 {
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0 0 4px;
+            font-size: 15px;
+        }
+
+        .admin-user-card .user-info p {
+            color: var(--gray-500);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .admin-user-card .user-info p strong {
+            color: var(--gray-700);
+        }
+
+        .badge-status {
+            font-weight: 600;
+            font-size: 12px;
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+        }
+
+        .badge-status.pending {
+            background: rgba(253, 203, 110, 0.2);
+            color: #D4A847;
+        }
+
+        .badge-status.approved {
+            background: rgba(85, 239, 196, 0.2);
+            color: #00A884;
+        }
+
+        .badge-status.rejected {
+            background: rgba(255, 118, 117, 0.2);
+            color: #D63031;
+        }
+
+        .client-tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 10px 4px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--gray-500);
+            cursor: pointer;
+        }
+
+        .client-tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ============================================================
+                   TOAST NOTIFICATIONS
+                ============================================================ */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-custom {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 16px 24px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 320px;
+            max-width: 440px;
+            border-left: 4px solid var(--primary);
+            animation: slideInRight 0.4s ease;
+            transition: var(--transition);
+        }
+
+        .toast-custom.success {
+            border-left-color: var(--success);
+        }
+
+        .toast-custom.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast-custom.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast-custom .toast-icon {
+            font-size: 24px;
+        }
+
+        .toast-custom .toast-msg {
+            flex: 1;
+            font-size: 14px;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .toast-custom .toast-close {
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            font-size: 18px;
+            transition: var(--transition);
+        }
+
+        .toast-custom .toast-close:hover {
+            color: var(--gray-700);
+        }
+
+        @keyframes slideInRight {
+            0% {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ============================================================
+                   WAITING PAGE
+                ============================================================ */
+        .waiting-container {
+            text-align: center;
+            padding: 60px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .waiting-container .waiting-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 44px;
+            color: white;
+            margin: 0 auto 24px;
+            animation: pulse 2s infinite;
+            box-shadow: 0 12px 40px rgba(108, 92, 231, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 12px 40px rgba(108, 92, 231, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 20px 60px rgba(108, 92, 231, 0.4);
+            }
+        }
+
+        .waiting-container h2 {
+            font-weight: 800;
+            font-size: 26px;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .waiting-container p {
+            color: var(--gray-500);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ============================================================
+                   LOADING SPINNER
+                ============================================================ */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner-custom {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ============================================================
+                   RESPONSIVE
+                ============================================================ */
+        @media (max-width: 768px) {
+            #app {
+                margin: 10px;
+                border-radius: var(--radius-lg);
+                padding: 0;
+                min-height: calc(100vh - 20px);
+            }
+
+            .page {
+                padding: 20px;
+            }
+
+            .navbar-custom {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .navbar-custom .nav-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .role-selection .welcome-text h2 {
+                font-size: 26px;
+            }
+
+            .role-card {
+                padding: 32px 20px;
+            }
+
+            .job-card {
+                padding: 18px 20px;
+            }
+
+            .admin-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .admin-user-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .admin-user-card .actions {
+                width: 100%;
+                display: flex;
+                gap: 8px;
+            }
+
+            .admin-user-card .actions button {
+                flex: 1;
+            }
+
+            .toast-container {
+                left: 16px;
+                right: 16px;
+            }
+
+            .toast-custom {
+                min-width: unset;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animated">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div id="app">
+        <!-- ========== ROLE SELECTION PAGE ========== -->
+        <div id="rolePage" class="page active">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
+                    <h1>Job<span>Portal</span></h1>
+                </div>
+            </div>
+            <div class="role-selection">
+                <div class="welcome-text animate__animated animate__fadeInDown">
+                    <h2>Welcome to <span>JobPortal</span></h2>
+                    <p>Choose your path — whether you're looking to hire talent or find your next project</p>
+                </div>
+                <div class="row g-4 mt-2" style="max-width: 700px; margin: 0 auto;">
+                    <div class="col-md-6 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+                        <div class="role-card" onclick="selectRole('developer')">
+                            <div class="icon-wrapper"><i class="bi bi-person-check"></i></div>
+                            <h4>Developer</h4>
+                            <p>Find jobs, work on projects, and showcase your skills</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                        <div class="role-card" onclick="selectRole('client')">
+                            <div class="icon-wrapper"><i class="bi bi-briefcase-fill"></i></div>
+                            <h4>Client</h4>
+                            <p>Post projects, hire developers, and bring ideas to life</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Admin Icon Button -->
+                <div style="text-align: center; margin-top: 40px;">
+                    <button onclick="openAdminPanel()" title="Admin Panel" 
+                            style="background: none; border: none; color: var(--gray-400); font-size: 24px; cursor: pointer; transition: var(--transition); padding: 8px 16px; border-radius: var(--radius-full);"
+                            onmouseover="this.style.color='var(--accent)'; this.style.background='rgba(253,121,168,0.1)'" 
+                            onmouseout="this.style.color='var(--gray-400)'; this.style.background='none'">
+                        <i class="bi bi-shield-fill"></i>
+                    </button>
+                    <p style="color: var(--gray-400); font-size: 11px; margin-top: 4px;">Admin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== DEVELOPER REGISTRATION PAGE ========== -->
+        <div id="devRegPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-person-check"></i></div>
+                    <h1>Developer <span>Registration</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="toggle-link" onclick="togglePages('devLoginPage')"><i class="bi bi-box-arrow-in-right"></i> Login</span>
+                </div>
+            </div>
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <div class="form-icon"><i class="bi bi-person-plus"></i></div>
+                    <h3>Create Developer Account</h3>
+                    <p class="sub">Fill in your details to start finding jobs</p>
+                </div>
+                <div class="form-container">
+                    <form id="devRegForm">
+                        <div class="mb-4">
+                            <label class="form-label-modern"><i class="bi bi-image"></i> Profile Image</label>
+                            <div class="file-upload-area" onclick="document.getElementById('devImage').click()">
+                                <i class="bi bi-cloud-upload"></i>
+                                <p>Click to upload your profile picture</p>
+                                <span class="file-name" id="devImageName"></span>
+                            </div>
+                            <input type="file" id="devImage" class="d-none" accept="image/*" onchange="document.getElementById('devImageName').textContent = this.files[0]?.name || ''; document.getElementById('devImageName').style.display = 'block'" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-person"></i> Full Name</label>
+                            <input type="text" id="devName" class="form-control-modern" placeholder="Enter your full name" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-envelope"></i> Email Address</label>
+                            <input type="email" id="devEmail" class="form-control-modern" placeholder="your@email.com" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-whatsapp"></i> WhatsApp Phone Number</label>
+                            <input type="tel" id="devPhone" class="form-control-modern" placeholder="+880 17XX-XXXXXX" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-card-image"></i> Job ID Card</label>
+                            <div class="file-upload-area" onclick="document.getElementById('devJobID').click()">
+                                <i class="bi bi-card-heading"></i>
+                                <p>Upload your Job ID card image</p>
+                                <span class="file-name" id="devJobIDName"></span>
+                            </div>
+                            <input type="file" id="devJobID" class="d-none" accept="image/*" onchange="document.getElementById('devJobIDName').textContent = this.files[0]?.name || ''; document.getElementById('devJobIDName').style.display = 'block'" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-credit-card-2-front"></i> NID Card</label>
+                            <div class="file-upload-area" onclick="document.getElementById('devNID').click()">
+                                <i class="bi bi-person-vcard"></i>
+                                <p>Upload your NID card image</p>
+                                <span class="file-name" id="devNIDName"></span>
+                            </div>
+                            <input type="file" id="devNID" class="d-none" accept="image/*" onchange="document.getElementById('devNIDName').textContent = this.files[0]?.name || ''; document.getElementById('devNIDName').style.display = 'block'" required />
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label-modern"><i class="bi bi-lock"></i> Password</label>
+                                <div class="password-toggle">
+                                    <input type="password" id="devPassword" class="form-control-modern" placeholder="Min 6 characters" required />
+                                    <button type="button" class="toggle-eye" onclick="togglePassword('devPassword', this)"><i class="bi bi-eye-slash"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-modern"><i class="bi bi-lock-fill"></i> Confirm Password</label>
+                                <div class="password-toggle">
+                                    <input type="password" id="devConfirmPassword" class="form-control-modern" placeholder="Re-enter password" required />
+                                    <button type="button" class="toggle-eye" onclick="togglePassword('devConfirmPassword', this)"><i class="bi bi-eye-slash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary-custom mt-3">
+                            <i class="bi bi-person-plus"></i> Create Developer Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== DEVELOPER LOGIN PAGE ========== -->
+        <div id="devLoginPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-person-check"></i></div>
+                    <h1>Developer <span>Login</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="toggle-link" onclick="togglePages('devRegPage')"><i class="bi bi-person-plus"></i> Register</span>
+                </div>
+            </div>
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <div class="form-icon"><i class="bi bi-box-arrow-in-right"></i></div>
+                    <h3>Welcome Back</h3>
+                    <p class="sub">Sign in to your developer account</p>
+                </div>
+                <div class="form-container">
+                    <form id="devLoginForm">
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-phone"></i> Phone Number</label>
+                            <input type="tel" id="devLoginPhone" class="form-control-modern" placeholder="Enter your phone number" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-lock"></i> Password</label>
+                            <div class="password-toggle">
+                                <input type="password" id="devLoginPassword" class="form-control-modern" placeholder="Enter your password" required />
+                                <button type="button" class="toggle-eye" onclick="togglePassword('devLoginPassword', this)"><i class="bi bi-eye-slash"></i></button>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="toggle-link small" onclick="togglePages('forgotPasswordPage')"><i class="bi bi-question-circle"></i> Forgot Password?</span>
+                        </div>
+                        <button type="submit" class="btn-primary-custom">
+                            <i class="bi bi-box-arrow-in-right"></i> Sign In
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== CLIENT REGISTRATION PAGE ========== -->
+        <div id="clientRegPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
+                    <h1>Client <span>Registration</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="toggle-link" onclick="togglePages('clientLoginPage')"><i class="bi bi-box-arrow-in-right"></i> Login</span>
+                </div>
+            </div>
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <div class="form-icon"><i class="bi bi-building"></i></div>
+                    <h3>Create Client Account</h3>
+                    <p class="sub">Register to post jobs and hire developers</p>
+                </div>
+                <div class="form-container">
+                    <form id="clientRegForm">
+                        <div class="mb-4">
+                            <label class="form-label-modern"><i class="bi bi-image"></i> Your Image</label>
+                            <div class="file-upload-area" onclick="document.getElementById('clientImage').click()">
+                                <i class="bi bi-cloud-upload"></i>
+                                <p>Click to upload your profile picture</p>
+                                <span class="file-name" id="clientImageName"></span>
+                            </div>
+                            <input type="file" id="clientImage" class="d-none" accept="image/*" onchange="document.getElementById('clientImageName').textContent = this.files[0]?.name || ''; document.getElementById('clientImageName').style.display = 'block'" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-person"></i> Your Name</label>
+                            <input type="text" id="clientName" class="form-control-modern" placeholder="Enter your full name" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-envelope"></i> Email Address</label>
+                            <input type="email" id="clientEmail" class="form-control-modern" placeholder="your@email.com" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-whatsapp"></i> WhatsApp Number</label>
+                            <input type="tel" id="clientPhone" class="form-control-modern" placeholder="+880 17XX-XXXXXX" required />
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label-modern"><i class="bi bi-lock"></i> Password</label>
+                                <div class="password-toggle">
+                                    <input type="password" id="clientPassword" class="form-control-modern" placeholder="Min 6 characters" required />
+                                    <button type="button" class="toggle-eye" onclick="togglePassword('clientPassword', this)"><i class="bi bi-eye-slash"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-modern"><i class="bi bi-lock-fill"></i> Confirm Password</label>
+                                <div class="password-toggle">
+                                    <input type="password" id="clientConfirmPassword" class="form-control-modern" placeholder="Re-enter password" required />
+                                    <button type="button" class="toggle-eye" onclick="togglePassword('clientConfirmPassword', this)"><i class="bi bi-eye-slash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary-custom mt-3" style="background: var(--gradient-2);">
+                            <i class="bi bi-building"></i> Create Client Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== CLIENT LOGIN PAGE ========== -->
+        <div id="clientLoginPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
+                    <h1>Client <span>Login</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="toggle-link" onclick="togglePages('clientRegPage')"><i class="bi bi-person-plus"></i> Register</span>
+                </div>
+            </div>
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <div class="form-icon"><i class="bi bi-box-arrow-in-right"></i></div>
+                    <h3>Welcome Back</h3>
+                    <p class="sub">Sign in to manage your projects</p>
+                </div>
+                <div class="form-container">
+                    <form id="clientLoginForm">
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-phone"></i> Phone Number</label>
+                            <input type="tel" id="clientLoginPhone" class="form-control-modern" placeholder="Enter your phone number" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-lock"></i> Password</label>
+                            <div class="password-toggle">
+                                <input type="password" id="clientLoginPassword" class="form-control-modern" placeholder="Enter your password" required />
+                                <button type="button" class="toggle-eye" onclick="togglePassword('clientLoginPassword', this)"><i class="bi bi-eye-slash"></i></button>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="toggle-link small" onclick="togglePages('forgotPasswordPage')"><i class="bi bi-question-circle"></i> Forgot Password?</span>
+                        </div>
+                        <button type="submit" class="btn-primary-custom" style="background: var(--gradient-2);">
+                            <i class="bi bi-box-arrow-in-right"></i> Sign In
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== FORGOT PASSWORD PAGE ========== -->
+        <div id="forgotPasswordPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-key"></i></div>
+                    <h1>Forgot <span>Password</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="toggle-link" onclick="togglePages('rolePage')"><i class="bi bi-house"></i> Home</span>
+                </div>
+            </div>
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <div class="form-icon"><i class="bi bi-envelope-paper"></i></div>
+                    <h3>Reset Your Password</h3>
+                    <p class="sub">Enter your email to receive a reset code</p>
+                </div>
+                <div class="form-container">
+                    <form id="forgotPasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-envelope"></i> Email Address</label>
+                            <input type="email" id="forgotEmail" class="form-control-modern" placeholder="your@email.com" required />
+                        </div>
+                        <button type="submit" class="btn-primary-custom">
+                            <i class="bi bi-send"></i> Send Reset Code
+                        </button>
+                        <div class="text-center mt-3">
+                            <span class="toggle-link" onclick="togglePages('resetPasswordPage')">Already have a code? Reset Password</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== RESET PASSWORD PAGE ========== -->
+        <div id="resetPasswordPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-shield-lock"></i></div>
+                    <h1>Reset <span>Password</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="toggle-link" onclick="togglePages('forgotPasswordPage')"><i class="bi bi-arrow-left"></i> Get Code</span>
+                </div>
+            </div>
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <div class="form-icon"><i class="bi bi-shield-check"></i></div>
+                    <h3>Enter Reset Details</h3>
+                    <p class="sub">Use the code sent to your email</p>
+                </div>
+                <div class="form-container">
+                    <form id="resetPasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-envelope"></i> Email Address</label>
+                            <input type="email" id="resetEmail" class="form-control-modern" placeholder="your@email.com" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-key"></i> Reset Code</label>
+                            <input type="text" id="resetCode" class="form-control-modern" placeholder="Enter the 6-digit code" required />
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label-modern"><i class="bi bi-lock"></i> New Password</label>
+                                <div class="password-toggle">
+                                    <input type="password" id="resetNewPassword" class="form-control-modern" placeholder="Min 6 characters" required />
+                                    <button type="button" class="toggle-eye" onclick="togglePassword('resetNewPassword', this)"><i class="bi bi-eye-slash"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-modern"><i class="bi bi-lock-fill"></i> Confirm Password</label>
+                                <div class="password-toggle">
+                                    <input type="password" id="resetConfirmPassword" class="form-control-modern" placeholder="Re-enter password" required />
+                                    <button type="button" class="toggle-eye" onclick="togglePassword('resetConfirmPassword', this)"><i class="bi bi-eye-slash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary-custom">
+                            <i class="bi bi-check-circle"></i> Reset Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== DEVELOPER HOMEPAGE ========== -->
+        <div id="devHomePage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
+                    <h1>Job<span>Portal</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="badge-role"><i class="bi bi-code-slash"></i> Developer</span>
+                    <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                </div>
+            </div>
+            <div class="job-feed-header">
+                <h3><i class="bi bi-grid-3x3-gap"></i> Available Jobs</h3>
+                <div class="job-search">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchJobs" placeholder="Search jobs..." oninput="filterJobs(this.value)" />
+                </div>
+            </div>
+            <div id="jobFeed"></div>
+        </div>
+
+        <!-- ========== CLIENT HOMEPAGE ========== -->
+        <div id="clientHomePage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
+                    <h1>Job<span>Portal</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="badge-role client"><i class="bi bi-building"></i> Client</span>
+                    <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                <button class="btn-primary-custom btn-small" onclick="togglePages('postJobPage')">
+                    <i class="bi bi-plus-circle"></i> Post New Job
+                </button>
+            </div>
+            <div class="client-tabs" style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--gray-200);">
+                <button id="clientTabMine" class="client-tab-btn active" onclick="switchClientTab('mine')">
+                    <i class="bi bi-file-earmark-text"></i> Your Posted Jobs
+                </button>
+                <button id="clientTabAll" class="client-tab-btn" onclick="switchClientTab('all')">
+                    <i class="bi bi-grid-3x3-gap"></i> Browse All Jobs
+                </button>
+            </div>
+            <div id="clientJobFeed"></div>
+            <div id="clientBrowseFeed" style="display: none;"></div>
+        </div>
+
+        <!-- ========== POST JOB PAGE ========== -->
+        <div id="postJobPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-plus-circle"></i></div>
+                    <h1>Post <span>New Job</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <button class="btn-back" onclick="togglePages('clientHomePage')"><i class="bi bi-arrow-left"></i> Back</button>
+                </div>
+            </div>
+            <div class="form-wrapper">
+                <div class="form-header">
+                    <div class="form-icon"><i class="bi bi-megaphone"></i></div>
+                    <h3>Create Job Posting</h3>
+                    <p class="sub">Describe your project to attract the right developer</p>
+                </div>
+                <div class="form-container">
+                    <form id="postJobForm">
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-type"></i> Job Title</label>
+                            <input type="text" id="jobTitle" class="form-control-modern" placeholder="e.g., React Website Development" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-text-paragraph"></i> Job Description</label>
+                            <textarea id="jobDetails" class="form-control-modern" rows="5" placeholder="Describe your project in detail..." style="resize: vertical; min-height: 120px;" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-modern"><i class="bi bi-whatsapp"></i> WhatsApp Number</label>
+                            <input type="tel" id="jobPhone" class="form-control-modern" placeholder="+880 17XX-XXXXXX" required />
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label-modern"><i class="bi bi-currency-dollar"></i> Budget</label>
+                                <input type="number" id="jobBudget" class="form-control-modern" placeholder="e.g., 5000" step="0.01" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-modern"><i class="bi bi-clock"></i> Time Duration <span style="font-weight: 400; color: var(--gray-400);">(Optional)</span></label>
+                                <input type="text" id="jobDuration" class="form-control-modern" placeholder="e.g., 2 weeks, 1 month" />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary-custom mt-3" style="background: var(--gradient-2);">
+                            <i class="bi bi-send"></i> Post Job
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== ADMIN PANEL ========== -->
+        <div id="adminPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
+                    <h1>Admin <span>Panel</span></h1>
+                </div>
+                <div class="nav-actions">
+                    <span class="badge-role admin"><i class="bi bi-shield"></i> Admin</span>
+                    <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                </div>
+            </div>
+            <div id="adminStats" class="admin-stats"></div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                <h3 style="font-weight: 700; font-size: 20px; color: var(--gray-900); margin: 0;">
+                    <i class="bi bi-briefcase"></i> Pending Job Posts
+                </h3>
+                <button class="btn-primary-custom btn-small" style="width: auto; background: var(--gradient-2);" onclick="downloadExcel()">
+                    <i class="bi bi-file-earmark-excel"></i> Download Excel
+                </button>
+            </div>
+            <div id="adminJobPanel" class="mb-4"></div>
+
+            <h3 style="font-weight: 700; font-size: 20px; color: var(--gray-900); margin-bottom: 16px;">
+                <i class="bi bi-hourglass-split"></i> Pending Account Approvals
+            </h3>
+            <div id="adminPanel"></div>
+        </div>
+
+        <!-- ========== WAITING APPROVAL PAGE ========== -->
+        <div id="waitingPage" class="page">
+            <div class="navbar-custom">
+                <div class="brand">
+                    <div class="logo-icon"><i class="bi bi-briefcase-fill"></i></div>
+                    <h1>Job<span>Portal</span></h1>
+                </div>
+            </div>
+            <div class="waiting-container">
+                <div class="waiting-icon"><i class="bi bi-hourglass-split"></i></div>
+                <h2>Waiting for Approval</h2>
+                <p>Your registration has been submitted successfully.<br>An admin will review and approve your account shortly.<br>You'll be notified via email once approved.</p>
+                <button class="btn-secondary-custom mt-4" style="width: auto;" onclick="logout()">
+                    <i class="bi bi-house"></i> Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main App JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>

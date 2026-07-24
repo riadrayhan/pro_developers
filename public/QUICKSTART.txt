@@ -1,0 +1,251 @@
+================================================================================
+                    JOBPORTAL - QUICK START GUIDE
+================================================================================
+
+WHAT IS JOBPORTAL?
+A web-based job marketplace where Developers find jobs and Clients post jobs.
+Includes admin approval system and interest tracking.
+
+================================================================================
+HOW TO USE (3 SIMPLE STEPS)
+================================================================================
+
+STEP 1: OPEN THE APP
+─────────────────────
+1. Open index.html in your web browser
+2. You'll see the JobPortal homepage with two options
+3. Choose your role: Developer or Client
+
+
+STEP 2: REGISTER YOUR ACCOUNT
+──────────────────────────────
+DEVELOPER REGISTRATION:
+✓ Click "Developer" card
+✓ Fill in the form:
+  - Profile Image (photo of yourself)
+  - Full Name (your name)
+  - Email Address (your email)
+  - WhatsApp Phone Number (for contact)
+  - Job ID Card Image (ID document)
+  - NID Card Image (National ID)
+  - Password (min 6 characters)
+  - Confirm Password (must match)
+✓ Click Register
+✓ Wait for admin approval
+
+CLIENT REGISTRATION:
+✓ Click "Client" card
+✓ Fill in the form:
+  - Company Logo/Image (company photo)
+  - Company Name (your company/name)
+  - Email Address (your email)
+  - WhatsApp Number (for contact)
+  - Password (min 6 characters)
+  - Confirm Password (must match)
+✓ Click Register
+✓ Wait for admin approval
+
+
+STEP 3: LOGIN & USE THE APP
+────────────────────────────
+DEVELOPER LOGIN:
+✓ Enter your WhatsApp phone number
+✓ Enter your password
+✓ Click Login
+✓ Browse available jobs
+✓ Click heart icon to show interest in jobs
+✓ See how many developers are interested
+
+CLIENT LOGIN:
+✓ Enter your WhatsApp phone number
+✓ Enter your password
+✓ Click Login
+✓ Click "Post New Job" button
+✓ Fill in job details:
+  - Job Title (what you need)
+  - Job Description (details about the job)
+  - WhatsApp Number (your contact)
+  - Budget (how much you're paying)
+  - Duration (optional: how long, e.g., "2 weeks")
+✓ See developer interest count on your jobs
+
+
+================================================================================
+ADMIN ACCESS (FOR TESTING)
+================================================================================
+
+TO APPROVE USERS:
+1. Go to Developer login page
+2. Enter Phone Number: admin
+3. Enter Password: admin123
+4. Click Login
+5. You'll see pending approvals
+6. Click "Approve" to accept users
+7. Click "Reject" to decline users
+
+AFTER APPROVAL:
+- Users can login with their registered phone + password
+- Developers can browse jobs
+- Clients can post jobs
+
+================================================================================
+TEST SCENARIO
+================================================================================
+
+TRY THIS TO TEST THE FULL FLOW:
+
+1. Register as Developer
+   - Use test photo or any image
+   - Email: dev@test.com
+   - Phone: 1234567890
+   - Password: test123
+
+2. Register as Client
+   - Use test photo or any image
+   - Email: client@test.com
+   - Phone: 0987654321
+   - Password: test456
+
+3. Login as Admin
+   - Phone: admin
+   - Password: admin123
+   - Approve both users
+
+4. Login as Client
+   - Phone: 0987654321
+   - Password: test456
+   - Post a test job
+
+5. Login as Developer
+   - Phone: 1234567890
+   - Password: test123
+   - Browse jobs
+   - Click heart to show interest
+
+6. Login as Client again
+   - See developer interest count
+
+================================================================================
+FEATURES
+================================================================================
+
+DEVELOPER FEATURES:
+• Registration with documents
+• Browse all client job postings
+• Show interest in jobs (like button)
+• Track job interest with heart icon
+• View client contact information
+• Logout from account
+
+CLIENT FEATURES:
+• Registration with company info
+• Post new jobs with details
+• View posted job listings
+• See developer interest count
+• View job details
+• Logout from account
+
+ADMIN FEATURES:
+• View pending registrations
+• Approve or reject users
+• See user details (name, email, type)
+• Manage user access
+
+================================================================================
+FORGOT PASSWORD
+================================================================================
+
+1. Click "Forgot Password?" on login page
+2. Enter your email address
+3. Click "Send Reset Link"
+4. You'll see a reset code displayed
+5. Use this code to reset your password
+
+(Note: In demo, code appears as alert. In production, would send via email)
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+CAN'T LOGIN?
+✓ Check if your account has been approved by admin
+✓ Use the phone number you registered with
+✓ Check if password is at least 6 characters
+✓ Clear browser cache if needed
+
+CAN'T REGISTER?
+✓ All fields are required
+✓ Passwords must match
+✓ Select images for profile and ID
+✓ Use valid email address
+
+NO JOBS SHOWING?
+✓ Wait for client to post jobs
+✓ Login as client and post a test job
+✓ Refresh the page
+✓ Check if you're approved
+
+LOST DATA?
+✓ Clearing browser cache will delete all data
+✓ Try private/incognito window
+✓ Use same browser for consistent experience
+
+================================================================================
+TIPS & TRICKS
+================================================================================
+
+1. USE UNIQUE PHONE NUMBERS
+   - Each developer/client needs different phone
+   - Phone used as username for login
+
+2. SAVE YOUR CREDENTIALS
+   - Write down your phone + password
+   - Need both to login
+
+3. ADMIN APPROVAL
+   - Admin must approve before you can login
+   - Go to admin panel and approve yourself for testing
+
+4. JOB INTEREST
+   - Click heart multiple times to toggle on/off
+   - See real-time counter update
+
+5. MULTIPLE ACCOUNTS
+   - Open in different browser or private window
+   - Login as different user simultaneously
+
+================================================================================
+IMPORTANT NOTES
+================================================================================
+
+DATA STORAGE:
+• All data stored in your browser
+• Data persists until cache is cleared
+• No server or cloud backup
+
+SECURITY:
+• Don't use real passwords (demo version)
+• Don't upload real personal documents
+• This is a demo/prototype application
+
+IMAGES:
+• Resize images before upload (large files may slow down)
+• Supported formats: JPG, PNG, GIF
+• Images converted to Base64 format
+
+================================================================================
+NEED HELP?
+================================================================================
+
+1. Read the full documentation in README.md
+2. Check FEATURES.md for detailed feature list
+3. Review the database structure documentation
+4. Try test scenario above
+
+================================================================================
+VERSION: 1.0
+LAST UPDATED: January 2024
+STATUS: Fully Functional Demo
+
+Thank you for using JobPortal!
+================================================================================
