@@ -4,11 +4,23 @@
 const API_BASE = '/api';
 
 // ==================== MONETAG AD NETWORK ====================
-// Registers Monetag's service worker (public/sw.js) at root scope so its
-// push-notification ad zone can run.
+// Disabled for now — uncomment to re-enable. Registers Monetag's service
+// worker (public/sw.js) at root scope so its push-notification ad zone can run.
+// if ('serviceWorker' in navigator) {
+//     navigator.serviceWorker.register('/sw.js').catch((err) => {
+//         console.error('Monetag service worker registration failed:', err.message);
+//     });
+// }
+
+// Unregisters the service worker for anyone who already picked it up while
+// ads were briefly live, so "disabled" actually means disabled for them too.
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-        console.error('Monetag service worker registration failed:', err.message);
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((reg) => {
+            if (reg.active && reg.active.scriptURL.includes('/sw.js')) {
+                reg.unregister();
+            }
+        });
     });
 }
 
