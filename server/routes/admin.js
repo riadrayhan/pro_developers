@@ -109,6 +109,13 @@ router.post('/reject/:userId', async (req, res) => {
         // Update approval status
         await db.setApprovalStatus(userId, 'rejected');
 
+        // Sync rejection status via Apps Script (non-blocking)
+        try {
+            await appsScript.approveUser(userId, type, 'rejected');
+        } catch (syncError) {
+            console.error('Apps Script sync failed (non-blocking):', syncError.message);
+        }
+
         res.json({ message: 'User rejected and removed from system.' });
     } catch (error) {
         console.error('Reject user error:', error);
