@@ -7,17 +7,23 @@
  * server or service-account key required, since it runs as your own
  * Google account.
  *
- * Folder layout created in Drive:
- *   JobPortal/
- *     Developers/<name> (<id>)/Photos, /Job ID Cards, /NID Cards
- *     Clients/<name> (<id>)/Photos
+ * Writes directly into the specific Drive folder and Spreadsheet below
+ * (rather than auto-creating new ones) so data always lands in the exact
+ * place you're already looking at. The account that deploys this script
+ * must own — or have edit access to — both.
  *
- * Sheet layout created in the "JobPortal Data" spreadsheet:
+ * Folder layout inside ROOT_FOLDER_ID:
+ *   Developers/<name> (<id>)/Photos, /Job ID Cards, /NID Cards
+ *   Clients/<name> (<id>)/Photos
+ *
+ * Sheet layout inside SPREADSHEET_ID:
  *   Developers, Clients, Jobs, Approvals
  */
 
-const ROOT_FOLDER_NAME = 'JobPortal';
-const SPREADSHEET_NAME = 'JobPortal Data';
+// https://drive.google.com/drive/folders/1w7tx-1AVb7lvaweVtjfD5ke-aG8qlpEC
+const ROOT_FOLDER_ID = '1w7tx-1AVb7lvaweVtjfD5ke-aG8qlpEC';
+// https://docs.google.com/spreadsheets/d/1Gw06MF5APAgiQJ2cP1f_8-BVu7tbTfoZna1mQQvFszE
+const SPREADSHEET_ID = '1Gw06MF5APAgiQJ2cP1f_8-BVu7tbTfoZna1mQQvFszE';
 
 const SHEETS = {
   DEVELOPERS: 'Developers',
@@ -120,8 +126,7 @@ function approveUser(data) {
 // ==================== DRIVE HELPERS ====================
 
 function getRootFolder() {
-  const folders = DriveApp.getFoldersByName(ROOT_FOLDER_NAME);
-  return folders.hasNext() ? folders.next() : DriveApp.createFolder(ROOT_FOLDER_NAME);
+  return DriveApp.getFolderById(ROOT_FOLDER_ID);
 }
 
 function getOrCreateSubfolder(parent, name) {
@@ -155,23 +160,7 @@ function saveBase64File(folder, subfolderName, base64Data, fileNamePrefix) {
 // ==================== SHEET HELPERS ====================
 
 function getSpreadsheet() {
-  const props = PropertiesService.getScriptProperties();
-  const storedId = props.getProperty('SPREADSHEET_ID');
-
-  if (storedId) {
-    try {
-      return SpreadsheetApp.openById(storedId);
-    } catch (e) {
-      // Fall through and recreate if the stored ID is stale/deleted.
-    }
-  }
-
-  const ss = SpreadsheetApp.create(SPREADSHEET_NAME);
-  const file = DriveApp.getFileById(ss.getId());
-  getRootFolder().addFile(file);
-  DriveApp.getRootFolder().removeFile(file);
-  props.setProperty('SPREADSHEET_ID', ss.getId());
-  return ss;
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
 }
 
 function getOrCreateSheet(name, headers) {
